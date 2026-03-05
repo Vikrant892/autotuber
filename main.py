@@ -7,6 +7,12 @@ import logging
 import os
 import sys
 from datetime import datetime
+
+# Create required dirs FIRST before logging setup
+os.makedirs("logs", exist_ok=True)
+os.makedirs("output", exist_ok=True)
+os.makedirs("data", exist_ok=True)
+
 from pipeline import db, trends, script, voice, video, thumbnail, upload
 
 logging.basicConfig(
@@ -18,16 +24,13 @@ logging.basicConfig(
     ]
 )
 log = logging.getLogger("orchestrator")
-os.makedirs("logs", exist_ok=True)
 
 
 def run_pipeline() -> dict:
-    """Run one full video pipeline. Returns result dict."""
     job_id = str(uuid.uuid4())[:8]
     log.info(f"═══ Starting job {job_id} ═══")
     db.init_db()
 
-    # ── 1. Find Topic ─────────────────────────────────────────────────────────
     try:
         log.info("Stage 1/6: Finding topic...")
         used = db.get_used_topics()
@@ -37,10 +40,8 @@ def run_pipeline() -> dict:
         db.update_job(job_id, stage="topic_found")
     except Exception as e:
         log.error(f"Topic finder failed: {e}")
-        db.fail_job(job_id, f"Trend stage failed: {e}")
         return {"success": False, "error": str(e), "stage": "trends"}
 
-    # ── 2. Generate Script ────────────────────────────────────────────────────
     try:
         log.info("Stage 2/6: Writing script...")
         db.update_job(job_id, stage="writing_script")
@@ -53,7 +54,6 @@ def run_pipeline() -> dict:
         db.fail_job(job_id, f"Script stage failed: {e}")
         return {"success": False, "error": str(e), "stage": "script"}
 
-    # ── 3. Generate Voice ─────────────────────────────────────────────────────
     try:
         log.info("Stage 3/6: Generating voiceover...")
         db.update_job(job_id, stage="generating_voice")
@@ -65,7 +65,6 @@ def run_pipeline() -> dict:
         db.fail_job(job_id, f"Voice stage failed: {e}")
         return {"success": False, "error": str(e), "stage": "voice"}
 
-    # ── 4. Build Video ────────────────────────────────────────────────────────
     try:
         log.info("Stage 4/6: Building video...")
         db.update_job(job_id, stage="building_video")
@@ -77,7 +76,6 @@ def run_pipeline() -> dict:
         db.fail_job(job_id, f"Video stage failed: {e}")
         return {"success": False, "error": str(e), "stage": "video"}
 
-    # ── 5. Generate Thumbnail ─────────────────────────────────────────────────
     try:
         log.info("Stage 5/6: Creating thumbnail...")
         db.update_job(job_id, stage="making_thumbnail")
@@ -92,19 +90,22 @@ def run_pipeline() -> dict:
         log.warning(f"Thumbnail failed (non-fatal): {e}")
         thumb_path = ""
 
-    # ── 6. Upload to YouTube ──────────────────────────────────────────────────
     try:
         log.info("Stage 6/6: Uploading to YouTube...")
         db.update_job(job_id, stage="uploading")
         result = upload.upload_video(
-            video_path   = video_path,
-            thumbnail_path = thumb_path,
-            title        = script_data["title"],
-            description  = script_data["description"],
-            tags         = script_data["tags"],
+            video_path=video_path,
+            thumbnail_path=thumb_path,
+            title=script_data["title"],
+            description=script_data["description"],
+            tags=script_data["tags"],
         )
         db.complete_job(job_id, result["video_id"], result["url"], result["title"])
-        upload.notify_dashboard({"job_id": job_id, "topic": topic, "title": result["title"], "video_url": result["url"], "video_id": result["video_id"], "status": "done", "stage": "uploaded"})
+        upload.notify_dashboard({
+            "job_id": job_id, "topic": topic,
+            "title": result["title"], "video_url": result["url"],
+            "video_id": result["video_id"], "status": "done", "stage": "uploaded"
+        })
         db.add_log(job_id, "INFO", f"Uploaded: {result['url']}")
         log.info(f"═══ Job {job_id} COMPLETE: {result['url']} ═══")
         return {"success": True, "job_id": job_id, **result}
