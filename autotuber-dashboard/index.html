@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AutoTuber — History Unveiled</title>
+<style>
+:root{--bg:#07070f;--card:#0f0f1f;--card2:#13131f;--orange:#ff6b35;--blue:#60a5fa;--green:#34d399;--red:#f87171;--amber:#fbbf24;--text:#e8e8f0;--muted:#6b7280;--border:#1e1e3a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+#canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;
+  border-bottom:1px solid var(--border);background:rgba(7,7,15,0.85);backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,#ff6b35,#ff4500);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;box-shadow:0 0 20px rgba(255,107,53,0.4)}
+.logo-name{font-size:18px;font-weight:700;letter-spacing:-0.5px}
+.logo-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.pulse{width:9px;height:9px;background:var(--green);border-radius:50%;
+  box-shadow:0 0 10px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.status-pill{font-size:12px;color:var(--muted);background:var(--card);
+  border:1px solid var(--border);padding:5px 12px;border-radius:20px}
+
+main{padding:36px 40px;max-width:1400px;margin:0 auto}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:32px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:18px;
+  padding:24px 22px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default}
+.stat:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.5)}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)}
+.stat.o{--c:var(--orange)}.stat.g{--c:var(--green)}.stat.b{--c:var(--blue)}.stat.a{--c:var(--amber)}
+.stat-ico{position:absolute;right:18px;top:18px;font-size:30px;opacity:.12}
+.stat-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.stat-val{font-size:38px;font-weight:800;line-height:1;color:var(--c)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:1fr 380px;gap:24px}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 22px;border-bottom:1px solid var(--border)}
+.card-title{font-size:14px;font-weight:600;letter-spacing:.3px}
+.refresh-btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s}
+.refresh-btn:hover{color:var(--text);border-color:var(--orange)}
+
+/* Video list */
+.vid{display:flex;align-items:flex-start;gap:14px;padding:14px 22px;
+  border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+.vid:hover{background:var(--card2)}
+.vid:last-child{border-bottom:none}
+.vid-thumb{width:88px;height:50px;border-radius:8px;background:var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:22px;overflow:hidden;object-fit:cover}
+.vid-info{flex:1;min-width:0}
+.vid-title{font-size:13px;font-weight:600;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vid-meta{font-size:11px;color:var(--muted)}
+.vid-meta a{color:var(--orange);text-decoration:none}
+.badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;align-self:center}
+.done{background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+.running{background:rgba(255,107,53,.12);color:var(--orange);border:1px solid rgba(255,107,53,.2);animation:pulse 1.5s infinite}
+.error{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.pending{background:rgba(107,114,128,.1);color:var(--muted);border:1px solid var(--border)}
+
+/* Pipeline */
+.stages{padding:18px 22px}
+.stage{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.stage-line{width:2px;height:14px;background:var(--border);margin:0 0 4px 15px}
+.s-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.s-done{background:rgba(52,211,153,.15);color:var(--green)}
+.s-active{background:rgba(255,107,53,.15);color:var(--orange);animation:pulse 1.5s infinite}
+.s-idle{background:rgba(30,30,58,1);color:var(--muted)}
+.s-name{font-size:13px;font-weight:500}
+.s-time{font-size:11px;color:var(--muted)}
+
+/* Next run timer */
+.next-card{padding:20px 22px}
+.next-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.next-time{font-size:28px;font-weight:700;color:var(--orange);font-variant-numeric:tabular-nums}
+.next-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.sched-dots{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.sched-dot{width:10px;height:10px;border-radius:50%;background:var(--border);
+  title:attr(data-time);cursor:help}
+.sched-dot.active{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.sched-dot.past{background:rgba(52,211,153,.5)}
+
+/* Revenue */
+.rev{padding:20px 22px}
+.rev-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.rev-lbl{font-size:12px;color:var(--muted);width:75px}
+.rev-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.rev-fill{height:100%;border-radius:3px;transition:width 1s}
+.rev-amt{font-size:12px;width:45px;text-align:right}
+.rev-total-row{display:flex;justify-content:space-between;align-items:center;
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.rev-total-val{font-size:26px;font-weight:800;color:var(--green)}
+
+/* GitHub workflow link */
+.gh-banner{display:flex;align-items:center;gap:10px;padding:12px 22px;
+  background:rgba(255,107,53,.05);border-top:1px solid var(--border);
+  font-size:12px;color:var(--muted)}
+.gh-banner a{color:var(--orange);text-decoration:none;font-weight:600}
+
+/* Logs */
+.log-area{font-size:11px;font-family:'Courier New',monospace;padding:14px 18px;
+  color:#7777aa;max-height:180px;overflow-y:auto;background:var(--bg);
+  border-top:1px solid var(--border)}
+
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.run-btn{background:var(--orange);color:#fff;border:none;padding:9px 20px;
+  border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.run-btn:hover{background:#ff8c5a;transform:scale(1.03)}
+
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:1fr}
+  header,main{padding:16px 20px}
+}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">H</div>
+    <div>
+      <div class="logo-name">History Unveiled</div>
+      <div class="logo-sub">AutoTuber Dashboard</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="pulse"></div>
+    <div class="status-pill" id="hdr-status">Checking...</div>
+    <a href="https://github.com/vikrant69g/autotuber/actions" target="_blank"
+       style="text-decoration:none">
+      <button class="run-btn">⚡ GitHub Actions ↗</button>
+    </a>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat o"><div class="stat-ico">🎬</div>
+      <div class="stat-lbl">Videos Published</div>
+      <div class="stat-val" id="s-done">0</div>
+      <div class="stat-sub">Uploaded to YouTube</div></div>
+    <div class="stat g"><div class="stat-ico">💰</div>
+      <div class="stat-lbl">Est. Revenue</div>
+      <div class="stat-val" id="s-rev">$0</div>
+      <div class="stat-sub">Based on $1.5 RPM avg</div></div>
+    <div class="stat b"><div class="stat-ico">⏱</div>
+      <div class="stat-lbl">Next Upload In</div>
+      <div class="stat-val" id="s-next">—</div>
+      <div class="stat-sub">Fully automatic</div></div>
+    <div class="stat a"><div class="stat-ico">📅</div>
+      <div class="stat-lbl">Uploads Today</div>
+      <div class="stat-val" id="s-today">0</div>
+      <div class="stat-sub">Up to 5 per day</div></div>
+  </div>
+
+  <div class="grid">
+    <!-- Left: video list -->
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">📹 Published Videos</div>
+          <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+        </div>
+        <div id="vid-list"><div class="empty">Loading...</div></div>
+        <div class="gh-banner">
+          🤖 Pipeline runs on GitHub Actions — free cloud compute, never stops.
+          <a href="https://github.com/vikrant69g/autotuber/actions" target="_blank">View runs ↗</a>
+        </div>
+      </div>
+
+      <!-- Logs -->
+      <div class="card" style="margin-top:22px">
+        <div class="card-hdr">
+          <div class="card-title">📋 Pipeline Log</div>
+          <span id="log-job" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+        <div class="log-area" id="log-area">Click a video above to see its pipeline log...</div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div style="display:flex;flex-direction:column;gap:22px">
+
+      <!-- Next run -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">⏰ Schedule</div></div>
+        <div class="next-card">
+          <div class="next-label">Next run in</div>
+          <div class="next-time" id="countdown">—</div>
+          <div class="next-sub" id="next-at">Calculating...</div>
+          <div style="margin-top:14px;font-size:11px;color:var(--muted);margin-bottom:8px">Today's scheduled runs (Adelaide time)</div>
+          <div class="sched-dots" id="sched-dots"></div>
+        </div>
+      </div>
+
+      <!-- Pipeline stages -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">⚡ Pipeline Stages</div></div>
+        <div class="stages" id="stages"></div>
+      </div>
+
+      <!-- Revenue -->
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">💵 Revenue Breakdown</div></div>
+        <div class="rev">
+          <div class="rev-row">
+            <div class="rev-lbl">YouTube Ads</div>
+            <div class="rev-track"><div class="rev-fill" id="r-yt" style="width:0%;background:var(--orange)"></div></div>
+            <div class="rev-amt" id="rv-yt">$0</div>
+          </div>
+          <div class="rev-row">
+            <div class="rev-lbl">Affiliate</div>
+            <div class="rev-track"><div class="rev-fill" id="r-af" style="width:0%;background:var(--blue)"></div></div>
+            <div class="rev-amt" id="rv-af">$0</div>
+          </div>
+          <div class="rev-total-row">
+            <span style="font-size:12px;color:var(--muted)">TOTAL ESTIMATE</span>
+            <span class="rev-total-val" id="rv-tot">$0</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px">
+            Monetisation unlocks at 1K subs + 4K watch hours (~Month 5)
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+// ── Particle bg ───────────────────────────────────────────────────────────────
+const cv=document.getElementById('canvas'),cx=cv.getContext('2d');
+let W,H,pts=[],mx=0,my=0;
+function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight}rsz();
+window.addEventListener('resize',rsz);
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+for(let i=0;i<90;i++)pts.push({x:Math.random()*1920,y:Math.random()*1080,
+  vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,
+  r:Math.random()*1.4+.3,h:[20,220,270][Math.floor(Math.random()*3)]});
+let t=0;
+function draw(){
+  requestAnimationFrame(draw);t+=.008;
+  cx.fillStyle='rgba(7,7,15,0.15)';cx.fillRect(0,0,W,H);
+  pts.forEach((p,i)=>{
+    const dx=p.x-mx,dy=p.y-my,d=Math.hypot(dx,dy);
+    if(d<130){p.vx+=dx/d*.025;p.vy+=dy/d*.025}
+    p.vx*=.98;p.vy*=.98;
+    p.x+=p.vx+Math.sin(t+i)*.05;p.y+=p.vy+Math.cos(t+i)*.05;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    pts.forEach((q,j)=>{if(j<=i)return;
+      const dd=Math.hypot(p.x-q.x,p.y-q.y);
+      if(dd<85){cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(q.x,q.y);
+        cx.strokeStyle=`rgba(255,107,53,${(1-dd/85)*.07})`;cx.lineWidth=.5;cx.stroke()}});
+    cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    cx.fillStyle=`hsla(${p.h},70%,65%,.5)`;cx.fill();
+  });
+}
+draw();
+
+// ── Schedule (UTC cron times → Adelaide) ─────────────────────────────────────
+// Cron: 0,3,7,12,19 UTC = 9:30am,12:30pm,4:30pm,9:30pm,4:30am Adelaide (ACST)
+const CRON_UTC=[0,3,7,12,19];
+
+function getNextRun(){
+  const now=new Date();
+  const runs=CRON_UTC.map(h=>{
+    const d=new Date(now);d.setUTCHours(h,0,0,0);
+    if(d<=now)d.setUTCDate(d.getUTCDate()+1);
+    return d;
+  });
+  return runs.sort((a,b)=>a-b)[0];
+}
+
+function toAdelaide(d){
+  return d.toLocaleString('en-AU',{timeZone:'Australia/Adelaide',
+    hour:'2-digit',minute:'2-digit',weekday:'short'});
+}
+
+function updateCountdown(){
+  const next=getNextRun();
+  const diff=Math.max(0,next-new Date());
+  const h=Math.floor(diff/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
+  document.getElementById('countdown').textContent=
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('next-at').textContent=`Next: ${toAdelaide(next)}`;
+
+  // Schedule dots
+  const dotsEl=document.getElementById('sched-dots');
+  const now=new Date();
+  dotsEl.innerHTML=CRON_UTC.map(h=>{
+    const d=new Date();d.setUTCHours(h,0,0,0);
+    const isPast=d<now&&d.toDateString()===now.toDateString();
+    const isNext=Math.abs(d-getNextRun())<60000;
+    const cls=isNext?'sched-dot active':isPast?'sched-dot past':'sched-dot';
+    const label=d.toLocaleString('en-AU',{timeZone:'Australia/Adelaide',hour:'2-digit',minute:'2-digit'});
+    return `<div class="${cls}" title="${label}"></div>`;
+  }).join('');
+}
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+// ── Pipeline stages ────────────────────────────────────────────────────────────
+const STAGES=[
+  {id:'topic_found', label:'Trend Finder',   icon:'🔍'},
+  {id:'script_done', label:'Script Writer',  icon:'✍️'},
+  {id:'voice_done',  label:'Voice Gen',      icon:'🎙️'},
+  {id:'video_done',  label:'Video Builder',  icon:'🎬'},
+  {id:'thumbnail_done',label:'Thumbnail',   icon:'🖼️'},
+  {id:'uploaded',    label:'YouTube Upload', icon:'📤'},
+];
+
+function renderStages(stage,status){
+  const el=document.getElementById('stages');
+  const idx=status==='done'?STAGES.length:STAGES.findIndex(s=>s.id===stage);
+  el.innerHTML=STAGES.map((s,i)=>{
+    let cls,sym;
+    if(i<idx){cls='s-done';sym='✓'}
+    else if(i===idx&&status==='running'){cls='s-active';sym='⟳'}
+    else{cls='s-idle';sym='·'}
+    return`${i>0?'<div class="stage-line"></div>':''}
+    <div class="stage"><div class="s-dot ${cls}">${sym}</div>
+    <div><div class="s-name">${s.icon} ${s.label}</div></div></div>`;
+  }).join('');
+}
+renderStages('',  'idle');
+
+// ── Mock data (replace with real GitHub API or your DB endpoint) ───────────────
+// In production: fetch from your Cloudflare Worker that reads D1 or KV
+const MOCK_JOBS=[
+  {id:'a1b2c3',topic:'Why the Roman Empire Really Fell',title:'The REAL Reason Rome Collapsed (Not What You Think)',
+   status:'done',stage:'uploaded',created_at:new Date(Date.now()-3600000*2).toISOString(),
+   video_url:'https://youtube.com'},
+  {id:'d4e5f6',topic:'Ancient Egyptian Technology',title:'5 Ancient Egyptian Technologies That Still Baffle Scientists',
+   status:'done',stage:'uploaded',created_at:new Date(Date.now()-3600000*8).toISOString(),
+   video_url:'https://youtube.com'},
+];
+
+function loadAll(){
+  const done=MOCK_JOBS.filter(j=>j.status==='done').length;
+  const running=MOCK_JOBS.filter(j=>j.status==='running').length;
+  const today=MOCK_JOBS.filter(j=>new Date(j.created_at).toDateString()===new Date().toDateString()).length;
+  const rev=(done*1.5).toFixed(0);
+
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-rev').textContent='$'+rev;
+  document.getElementById('s-today').textContent=today;
+  document.getElementById('hdr-status').textContent=running?'Pipeline running...':'Auto-pilot active';
+
+  // Revenue bars
+  const yt=done*1.05,af=done*.45;
+  document.getElementById('r-yt').style.width=Math.min(100,done*5)+'%';
+  document.getElementById('r-af').style.width=Math.min(100,done*2)+'%';
+  document.getElementById('rv-yt').textContent='$'+yt.toFixed(0);
+  document.getElementById('rv-af').textContent='$'+af.toFixed(0);
+  document.getElementById('rv-tot').textContent='$'+(yt+af).toFixed(0);
+
+  // Video list
+  const el=document.getElementById('vid-list');
+  if(!MOCK_JOBS.length){el.innerHTML='<div class="empty">First video uploading soon...</div>';return}
+  el.innerHTML=MOCK_JOBS.map(j=>`
+    <div class="vid" onclick="showLog('${j.id}','${j.stage}','${j.status}')">
+      <div class="vid-thumb">🎬</div>
+      <div class="vid-info">
+        <div class="vid-title">${j.title||j.topic}</div>
+        <div class="vid-meta">${new Date(j.created_at).toLocaleString('en-AU',{timeZone:'Australia/Adelaide'})}
+          ${j.video_url?` · <a href="${j.video_url}" target="_blank">Watch ↗</a>`:''}
+        </div>
+      </div>
+      <div class="badge ${j.status}">${j.status}</div>
+    </div>`).join('');
+
+  // Stages from latest
+  if(MOCK_JOBS[0]) renderStages(MOCK_JOBS[0].stage, MOCK_JOBS[0].status);
+}
+
+function showLog(id,stage,status){
+  document.getElementById('log-job').textContent='Job: '+id;
+  document.getElementById('log-area').innerHTML=
+    `<div style="color:#6b7280">[INFO] Topic selected and script generated</div>
+     <div style="color:#6b7280">[INFO] Microsoft TTS voiceover complete</div>
+     <div style="color:#6b7280">[INFO] Pexels stock footage downloaded</div>
+     <div style="color:#6b7280">[INFO] Video rendered (00:06:24)</div>
+     <div style="color:#6b7280">[INFO] Thumbnail generated</div>
+     <div style="color:var(--green)">[INFO] ✅ Uploaded to YouTube successfully</div>`;
+  renderStages(stage,status);
+}
+
+loadAll();
+setInterval(loadAll,30000);
+</script>
+</body>
+</html>
