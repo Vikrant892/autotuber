@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AutoTuber — History Unveiled</title>
+<style>
+  :root {
+    --bg: #07070f; --card: #0f0f1f; --card2: #13131f;
+    --orange: #ff6b35; --blue: #60a5fa; --green: #34d399;
+    --red: #f87171; --text: #e8e8f0; --muted: #6b7280; --border: #1e1e3a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; min-height:100vh; }
+
+  /* Particle canvas */
+  #canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+  .app { position:relative; z-index:1; }
+
+  /* Header */
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 40px;
+    border-bottom:1px solid var(--border);
+    background:rgba(7,7,15,0.8);
+    backdrop-filter:blur(12px);
+    position:sticky; top:0; z-index:100;
+  }
+  .logo { display:flex; align-items:center; gap:12px; }
+  .logo-icon { width:40px; height:40px; background:var(--orange); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; }
+  .logo-text { font-size:18px; font-weight:700; }
+  .logo-sub { font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+  .header-right { display:flex; align-items:center; gap:16px; }
+  .live-dot { width:8px; height:8px; background:var(--green); border-radius:50%;
+    box-shadow:0 0 8px var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .status-text { font-size:13px; color:var(--muted); }
+
+  /* Main grid */
+  main { padding:32px 40px; max-width:1400px; margin:0 auto; }
+
+  /* Stat cards */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:32px; }
+  .stat-card {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px; padding:24px;
+    position:relative; overflow:hidden;
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,0.4); }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--accent);
+  }
+  .stat-card.orange { --accent: var(--orange); }
+  .stat-card.blue   { --accent: var(--blue); }
+  .stat-card.green  { --accent: var(--green); }
+  .stat-card.red    { --accent: var(--red); }
+  .stat-label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .stat-value { font-size:36px; font-weight:700; line-height:1; }
+  .stat-sub { font-size:12px; color:var(--muted); margin-top:6px; }
+  .stat-icon { position:absolute; right:20px; top:20px; font-size:28px; opacity:0.15; }
+
+  /* Two-column layout */
+  .two-col { display:grid; grid-template-columns:1fr 360px; gap:24px; }
+
+  /* Section card */
+  .section-card {
+    background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden;
+  }
+  .section-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 24px; border-bottom:1px solid var(--border);
+  }
+  .section-title { font-size:14px; font-weight:600; letter-spacing:0.5px; }
+  .section-body { padding:0; }
+
+  /* Video list */
+  .video-item {
+    display:flex; align-items:flex-start; gap:16px;
+    padding:16px 24px; border-bottom:1px solid var(--border);
+    transition:background 0.15s;
+    cursor:pointer;
+  }
+  .video-item:hover { background:var(--card2); }
+  .video-item:last-child { border-bottom:none; }
+  .v-thumb {
+    width:80px; height:45px; border-radius:8px; flex-shrink:0;
+    background:var(--border); object-fit:cover;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .v-info { flex:1; min-width:0; }
+  .v-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px; }
+  .v-meta { font-size:11px; color:var(--muted); }
+  .v-status { padding:3px 9px; border-radius:20px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; flex-shrink:0; }
+  .status-done    { background:rgba(52,211,153,0.15); color:var(--green); }
+  .status-running { background:rgba(255,107,53,0.15); color:var(--orange); }
+  .status-error   { background:rgba(248,113,113,0.15); color:var(--red); }
+  .status-pending { background:rgba(107,114,128,0.15); color:var(--muted); }
+
+  /* Pipeline stages */
+  .pipeline { padding:20px 24px; }
+  .stage-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .stage-dot { width:32px; height:32px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .stage-done    { background:rgba(52,211,153,0.2); color:var(--green); }
+  .stage-active  { background:rgba(255,107,53,0.2); color:var(--orange); animation:pulse 1.5s infinite; }
+  .stage-pending { background:rgba(30,30,58,1); color:var(--muted); }
+  .stage-info { flex:1; }
+  .stage-name { font-size:13px; font-weight:500; }
+  .stage-time { font-size:11px; color:var(--muted); }
+  .stage-connector { width:2px; height:12px; background:var(--border); margin:0 0 2px 15px; }
+
+  /* Trigger button */
+  .btn {
+    padding:10px 20px; border-radius:10px; font-size:13px; font-weight:600;
+    cursor:pointer; border:none; transition:all 0.2s;
+  }
+  .btn-primary { background:var(--orange); color:white; }
+  .btn-primary:hover { background:#ff8c5a; transform:scale(1.02); }
+  .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  .btn-ghost:hover { color:var(--text); border-color:var(--text); }
+
+  /* Revenue chart */
+  .rev-bar { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .rev-label { font-size:12px; color:var(--muted); width:80px; flex-shrink:0; }
+  .rev-track { flex:1; background:var(--border); border-radius:4px; height:8px; overflow:hidden; }
+  .rev-fill { height:100%; border-radius:4px; transition:width 0.8s; }
+  .rev-val { font-size:12px; color:var(--text); width:50px; text-align:right; }
+
+  /* Log viewer */
+  .log-area { font-size:11px; font-family:'Courier New',monospace; padding:16px; color:#8888aa;
+    max-height:200px; overflow-y:auto; background:var(--bg); }
+  .log-info  { color:#6b7280; }
+  .log-error { color:var(--red); }
+  .log-warn  { color:#fbbf24; }
+
+  .empty { text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+
+  @media (max-width:900px) {
+    .stats-grid { grid-template-columns:repeat(2,1fr); }
+    .two-col { grid-template-columns:1fr; }
+    header, main { padding:16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">H</div>
+      <div>
+        <div class="logo-text">AutoTuber</div>
+        <div class="logo-sub">History Unveiled</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-dot"></div>
+      <div class="status-text" id="header-status">Loading...</div>
+      <button class="btn btn-primary" id="trigger-btn" onclick="triggerPipeline()">▶ Run Now</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card orange">
+        <div class="stat-icon">🎬</div>
+        <div class="stat-label">Videos Published</div>
+        <div class="stat-value" id="stat-done">—</div>
+        <div class="stat-sub">Total uploaded to YouTube</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">💰</div>
+        <div class="stat-label">Est. Monthly Revenue</div>
+        <div class="stat-value" id="stat-rev">—</div>
+        <div class="stat-sub">Based on avg $1.5 RPM</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">⚙️</div>
+        <div class="stat-label">Currently Running</div>
+        <div class="stat-value" id="stat-running">—</div>
+        <div class="stat-sub">Active pipeline jobs</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-label">Errors</div>
+        <div class="stat-value" id="stat-errors">—</div>
+        <div class="stat-sub">Failed jobs</div>
+      </div>
+    </div>
+
+    <!-- Two col -->
+    <div class="two-col">
+      <!-- Videos list -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">📹 Recent Videos</div>
+          <button class="btn btn-ghost" onclick="loadJobs()">Refresh</button>
+        </div>
+        <div class="section-body" id="video-list">
+          <div class="empty">Loading videos...</div>
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+
+        <!-- Pipeline stages -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">⚡ Pipeline Stages</div>
+          </div>
+          <div class="pipeline" id="pipeline-stages">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <!-- Revenue breakdown -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">💵 Revenue Estimate</div>
+          </div>
+          <div style="padding:20px 24px;">
+            <div class="rev-bar">
+              <div class="rev-label">AdSense</div>
+              <div class="rev-track"><div class="rev-fill" style="width:70%;background:#FF6B35;"></div></div>
+              <div class="rev-val" id="rev-adsense">$0</div>
+            </div>
+            <div class="rev-bar">
+              <div class="rev-label">Affiliate</div>
+              <div class="rev-track"><div class="rev-fill" style="width:20%;background:#60a5fa;"></div></div>
+              <div class="rev-val" id="rev-affiliate">$0</div>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);
+              display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:var(--muted);">TOTAL ESTIMATE</span>
+              <span style="font-size:22px;font-weight:700;color:var(--green)" id="rev-total">$0</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px;">
+              Grows as channel hits monetisation threshold (1K subs + 4K hours)
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="section-card" style="margin-top:24px;">
+      <div class="section-header">
+        <div class="section-title">📋 Live Logs</div>
+        <span style="font-size:12px;color:var(--muted)" id="log-job-id"></span>
+      </div>
+      <div class="log-area" id="log-area">Select a video above to see logs...</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Particle canvas ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+const PARTICLE_COUNT = 80;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function initParticles() {
+  particles = Array.from({length: PARTICLE_COUNT}, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+    r: Math.random() * 1.5 + 0.3,
+    hue: [20, 220, 270][Math.floor(Math.random()*3)],
+    alpha: Math.random() * 0.5 + 0.2
+  }));
+}
+initParticles();
+
+let mouseX = W/2, mouseY = H/2;
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+function drawParticles() {
+  ctx.fillStyle = 'rgba(7,7,15,0.15)';
+  ctx.fillRect(0,0,W,H);
+  const t = Date.now() * 0.001;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    const dx = p.x - mouseX, dy = p.y - mouseY;
+    const d  = Math.hypot(dx,dy);
+    if (d < 120) { p.vx += dx/d*0.03; p.vy += dy/d*0.03; }
+    p.vx *= 0.98; p.vy *= 0.98;
+    p.x += p.vx + Math.sin(t + i) * 0.05;
+    p.y += p.vy + Math.cos(t + i) * 0.05;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    for (let j = i+1; j < particles.length; j++) {
+      const q  = particles[j];
+      const dd = Math.hypot(p.x-q.x, p.y-q.y);
+      if (dd < 90) {
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
+        ctx.strokeStyle = `rgba(255,107,53,${(1-dd/90)*0.08})`;
+        ctx.lineWidth = 0.5; ctx.stroke();
+      }
+    }
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fillStyle = `hsla(${p.hue},70%,65%,${p.alpha})`;
+    ctx.fill();
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── Pipeline stages ────────────────────────────────────────────────────────────
+const STAGES = [
+  {id:'topic_found',  label:'Trend Finder',   icon:'🔍'},
+  {id:'script_done',  label:'Script Writer',  icon:'✍️'},
+  {id:'voice_done',   label:'Voice Gen',      icon:'🎙️'},
+  {id:'video_done',   label:'Video Builder',  icon:'🎬'},
+  {id:'thumbnail_done',label:'Thumbnail',     icon:'🖼️'},
+  {id:'uploaded',     label:'YouTube Upload', icon:'📤'},
+];
+
+function renderStages(currentStage, status) {
+  const el = document.getElementById('pipeline-stages');
+  let stageIndex = STAGES.findIndex(s => s.id === currentStage);
+  if (status === 'done') stageIndex = STAGES.length;
+
+  el.innerHTML = STAGES.map((s, i) => {
+    let cls, symbol;
+    if (i < stageIndex)      { cls = 'stage-done';    symbol = '✓'; }
+    else if (i === stageIndex && status === 'running') { cls = 'stage-active'; symbol = '⟳'; }
+    else if (status === 'error' && i === stageIndex)   { cls = 'stage-pending'; symbol = '✗'; }
+    else                     { cls = 'stage-pending';  symbol = '·'; }
+    return `
+      ${i > 0 ? '<div class="stage-connector"></div>' : ''}
+      <div class="stage-row">
+        <div class="stage-dot ${cls}">${symbol}</div>
+        <div class="stage-info">
+          <div class="stage-name">${s.icon} ${s.label}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── API calls ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+  const d = await fetch('/api/stats').then(r=>r.json());
+  document.getElementById('stat-done').textContent    = d.done;
+  document.getElementById('stat-rev').textContent     = '$' + (d.done * 1.5).toFixed(0);
+  document.getElementById('stat-running').textContent = d.running;
+  document.getElementById('stat-errors').textContent  = d.errors;
+  document.getElementById('header-status').textContent = d.running > 0 ? 'Pipeline running...' : 'Idle — next run at 7:00am';
+
+  const rev = d.done * 1.5;
+  document.getElementById('rev-adsense').textContent   = '$' + (rev * 0.7).toFixed(0);
+  document.getElementById('rev-affiliate').textContent = '$' + (rev * 0.3).toFixed(0);
+  document.getElementById('rev-total').textContent     = '$' + rev.toFixed(0);
+}
+
+async function loadJobs() {
+  const jobs = await fetch('/api/jobs?n=20').then(r=>r.json());
+  const el = document.getElementById('video-list');
+
+  if (!jobs.length) {
+    el.innerHTML = '<div class="empty">No videos yet. Hit "Run Now" to generate the first one!</div>';
+    renderStages('', 'pending');
+    return;
+  }
+
+  el.innerHTML = jobs.map(j => `
+    <div class="video-item" onclick="showLogs('${j.id}')">
+      <div class="v-thumb">${j.status==='done'?'🎬':'⏳'}</div>
+      <div class="v-info">
+        <div class="v-title">${j.title || j.topic || 'Processing...'}</div>
+        <div class="v-meta">
+          ${j.created_at ? new Date(j.created_at).toLocaleString() : ''}
+          ${j.video_url ? ` • <a href="${j.video_url}" target="_blank" style="color:var(--orange);text-decoration:none;">Watch ↗</a>` : ''}
+        </div>
+      </div>
+      <div class="v-status status-${j.status}">${j.status}</div>
+    </div>
+  `).join('');
+
+  // Show pipeline state from latest job
+  const latest = jobs[0];
+  renderStages(latest.stage, latest.status);
+}
+
+async function showLogs(jobId) {
+  document.getElementById('log-job-id').textContent = 'Job: ' + jobId;
+  const logs = await fetch(`/api/logs/${jobId}`).then(r=>r.json());
+  const el = document.getElementById('log-area');
+  if (!logs.length) { el.innerHTML = 'No logs yet.'; return; }
+  el.innerHTML = logs.reverse().map(l =>
+    `<div class="log-${l.level.toLowerCase()}">[${l.ts}] ${l.message}</div>`
+  ).join('');
+}
+
+async function triggerPipeline() {
+  const btn = document.getElementById('trigger-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Starting...';
+  try {
+    const r = await fetch('/api/trigger', {method:'POST'}).then(r=>r.json());
+    btn.textContent = '✅ Running!';
+    setTimeout(() => { btn.disabled=false; btn.textContent='▶ Run Now'; }, 5000);
+    setTimeout(loadJobs, 2000);
+  } catch(e) {
+    btn.textContent = '❌ Error';
+    btn.disabled = false;
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+loadStats();
+loadJobs();
+setInterval(loadStats, 15000);
+setInterval(loadJobs, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  # Daily pipeline scheduler
+  scheduler:
+    build: .
+    command: python scheduler.py
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./logs:/app/logs
+    env_file: .env
+    restart: unless-stopped
+
+  # Dashboard web UI
+  dashboard:
+    build: .
+    command: python dashboard/app.py
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - scheduler

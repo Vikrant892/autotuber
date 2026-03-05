@@ -1,0 +1,25 @@
+# Core
+anthropic>=0.40.0
+python-dotenv>=1.0.0
+
+# Trends
+pytrends>=4.9.2
+requests>=2.31.0
+
+# Voice (Microsoft TTS — free)
+edge-tts>=6.1.12
+
+# Video assembly
+moviepy>=1.0.3
+Pillow>=10.0.0
+
+# YouTube upload
+google-api-python-client>=2.100.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+
+# Dashboard
+flask>=3.0.0
+
+# Scheduler
+APScheduler>=3.10.0
