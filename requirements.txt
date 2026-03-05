@@ -20,6 +20,6 @@ google-auth-httplib2>=0.2.0
 
 # Dashboard
 flask>=3.0.0
-
+opencv-python-headless>=4.8.0
 # Scheduler
 APScheduler>=3.10.0
