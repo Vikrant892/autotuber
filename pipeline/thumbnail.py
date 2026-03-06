@@ -7,7 +7,9 @@ import logging
 import textwrap
 import requests
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
-from config import OUTPUT_DIR, PEXELS_API_KEY
+import os
+from config import OUTPUT_DIR
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY", "REDACTED_PEXELS_KEY")
 
 log = logging.getLogger(__name__)
 W, H = 1080, 1920
