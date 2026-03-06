@@ -1,162 +1,107 @@
-import os, logging, requests, tempfile
-import numpy as np
-from config import OUTPUT_DIR, VIDEO_FPS, VIDEO_WIDTH, VIDEO_HEIGHT, PEXELS_API_KEY
+"""
+pipeline/video.py
+Upgraded: MoviePy → FFmpeg + ElevenLabs word timings + ASS pop subtitles
+Background: Minecraft parkour footage (looped) — place at assets/minecraft_parkour.mp4
+Output: 1080x1920 vertical, 60fps, H264, ready for YouTube Shorts
+"""
+import json
+import logging
+import os
+import subprocess
+from config import OUTPUT_DIR, VIDEO_FPS, VIDEO_WIDTH, VIDEO_HEIGHT, MINECRAFT_BG_PATH
+from pipeline.subtitles import generate_ass
 
 log = logging.getLogger(__name__)
 W, H = VIDEO_WIDTH, VIDEO_HEIGHT
 
 
-def _fetch_clip(keyword):
-    if not PEXELS_API_KEY:
-        return None
-    for orientation in ("portrait", "landscape"):
-        try:
-            r = requests.get(
-                "https://api.pexels.com/videos/search",
-                headers={"Authorization": PEXELS_API_KEY},
-                params={"query": keyword, "per_page": 5,
-                        "orientation": orientation, "size": "medium"},
-                timeout=15
-            )
-            videos = r.json().get("videos", []) if r.ok else []
-            for vid in videos:
-                files = vid.get("video_files", [])
-                src = next((f["link"] for f in files if f.get("quality") in ("hd", "sd")), None)
-                if not src:
-                    continue
-                tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
-                tmp.write(requests.get(src, timeout=60).content)
-                tmp.close()
-                return tmp.name
-        except Exception as e:
-            log.warning(f"Pexels failed: {e}")
-    return None
+def _get_duration(path: str) -> float:
+    cmd = [
+        "ffprobe", "-v", "error",
+        "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        path,
+    ]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    return float(r.stdout.strip())
 
 
-def _gradient(t, duration):
-    frame = np.zeros((H, W, 3), dtype=np.uint8)
-    p = t / max(duration, 1)
-    frame[:, :] = [int(8 + 12*np.sin(p*np.pi)), int(4 + 6*np.sin(p*np.pi+1)), int(20 + 15*np.sin(p*np.pi+2))]
-    return frame
-
-
-def build_video(voice_path, script_data, job_id, topic):
-    from moviepy.editor import (
-        VideoFileClip, AudioFileClip, ColorClip, TextClip,
-        CompositeVideoClip, concatenate_videoclips, VideoClip
-    )
-
+def build_video(voice_path: str, script_data: dict, job_id: str, topic: str) -> str:
+    """
+    Assembles final MP4:
+    1. Loops Minecraft parkour background to audio length
+    2. Crops/scales to 1080x1920 vertical
+    3. Burns in ASS pop subtitles (word-by-word)
+    4. Mixes ElevenLabs audio
+    5. Fade in/out
+    Returns path to final MP4.
+    """
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    out_path = os.path.join(OUTPUT_DIR, f"{job_id}_short.mp4")
 
-    voice = AudioFileClip(voice_path)
-    duration = min(voice.duration, 58)
+    out_path      = os.path.join(OUTPUT_DIR, f"{job_id}_short.mp4")
+    subs_path     = os.path.join(OUTPUT_DIR, f"{job_id}_subs.ass")
+    timings_path  = os.path.join(OUTPUT_DIR, f"{job_id}_timings.json")
+
+    # ── Load word timings saved by voice.py ────────────────────────────────────
+    if not os.path.exists(timings_path):
+        raise FileNotFoundError(
+            f"Word timings not found: {timings_path}\n"
+            "Make sure voice.py ran successfully first."
+        )
+    with open(timings_path) as f:
+        word_timings = json.load(f)
+
+    # ── Generate ASS pop subtitles ─────────────────────────────────────────────
+    log.info(f"Generating pop subtitles ({len(word_timings)} words)...")
+    generate_ass(word_timings, subs_path)
+
+    # ── Check background footage ───────────────────────────────────────────────
+    if not os.path.exists(MINECRAFT_BG_PATH):
+        raise FileNotFoundError(
+            f"Minecraft background not found: {MINECRAFT_BG_PATH}\n"
+            "Download free Minecraft parkour footage and place it there.\n"
+            "yt-dlp command: yt-dlp -f 'bestvideo[ext=mp4]' YOUR_URL -o assets/minecraft_parkour.mp4"
+        )
+
+    duration = _get_duration(voice_path)
+    duration = min(duration, 58)
     log.info(f"Duration: {duration:.1f}s")
 
-    clip_path = _fetch_clip(script_data.get("search_keyword", topic))
+    fade = 0.4
+    vf = ",".join([
+        f"scale={W}:{H}:force_original_aspect_ratio=increase",
+        f"crop={W}:{H}",
+        # Slight darken so subtitles pop
+        "colorlevels=romax=0.7:gomax=0.7:bomax=0.7",
+        f"ass={subs_path}",
+        f"fade=t=in:st=0:d={fade}",
+        f"fade=t=out:st={duration - fade}:d={fade}",
+    ])
 
-    if clip_path:
-        try:
-            raw = VideoFileClip(clip_path)
-            rw, rh = raw.size
-            if rw > rh:
-                margin = (rw - rh) // 2
-                raw = raw.crop(x1=margin, x2=rw - margin)
-            bg = raw.resize((W, H))
-            if bg.duration < duration:
-                bg = concatenate_videoclips([bg] * (int(duration / bg.duration) + 2))
-            bg = bg.subclip(0, duration)
-        except Exception as e:
-            log.warning(f"Clip failed: {e}")
-            bg = VideoClip(lambda t: _gradient(t, duration), duration=duration).set_fps(VIDEO_FPS)
-    else:
-        bg = VideoClip(lambda t: _gradient(t, duration), duration=duration).set_fps(VIDEO_FPS)
+    cmd = [
+        "ffmpeg", "-y",
+        "-stream_loop", "-1",       # loop background
+        "-i", MINECRAFT_BG_PATH,
+        "-i", voice_path,
+        "-t", str(duration),
+        "-vf", vf,
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "18",               # high quality
+        "-c:a", "aac",
+        "-b:a", "192k",
+        "-shortest",
+        "-movflags", "+faststart",
+        "-r", str(VIDEO_FPS),
+        out_path,
+    ]
 
-    dark = ColorClip((W, H), color=(0, 0, 0), duration=duration).set_opacity(0.55)
-    layers = [bg, dark]
+    log.info("Rendering video with FFmpeg...")
+    result = subprocess.run(cmd, capture_output=True, text=True)
 
-    layers.append(ColorClip((W, 8), color=(255, 107, 53), duration=duration).set_position(("left", 0)))
-    layers.append(ColorClip((W, 8), color=(255, 107, 53), duration=duration).set_position(("left", H - 8)))
+    if result.returncode != 0:
+        raise RuntimeError(f"FFmpeg failed:\n{result.stderr}")
 
-    layers.append(
-        TextClip("HISTORY UNVEILED", fontsize=38, color="#FF6B35",
-                 font="DejaVu-Sans-Bold", method="label")
-        .set_position(("center", 55)).set_duration(duration).set_opacity(0.9)
-    )
-
-    hook_text = script_data.get("hook", "")
-    if hook_text:
-        layers.append(
-            TextClip(hook_text, fontsize=70, color="white", font="DejaVu-Sans-Bold",
-                     method="caption", size=(W - 80, None), align="center",
-                     stroke_color="black", stroke_width=3)
-            .set_position(("center", H // 2 - 200))
-            .set_start(0).set_duration(7).crossfadein(0.2).crossfadeout(0.4)
-        )
-
-    body_text = script_data.get("body", "")
-    if body_text:
-        first = body_text.split(".")[0].strip() + "."
-        layers.append(
-            ColorClip((W - 60, 220), color=(255, 107, 53), duration=4)
-            .set_position(("center", H // 2 - 110))
-            .set_start(7).set_opacity(0.92).crossfadein(0.25).crossfadeout(0.3)
-        )
-        layers.append(
-            TextClip(first, fontsize=46, color="white", font="DejaVu-Sans-Bold",
-                     method="caption", size=(W - 130, None), align="center")
-            .set_position(("center", H // 2 - 100))
-            .set_start(7).set_duration(4).crossfadein(0.25).crossfadeout(0.3)
-        )
-
-    if body_text and duration > 14:
-        layers.append(
-            TextClip(body_text, fontsize=50, color="white", font="DejaVu-Sans",
-                     method="caption", size=(W - 80, None), align="center",
-                     stroke_color="black", stroke_width=2)
-            .set_position(("center", H // 2 - 100))
-            .set_start(11).set_duration(max(4, duration - 17))
-            .crossfadein(0.4).crossfadeout(0.4)
-        )
-
-    cta_text = script_data.get("cta", "Follow for more!")
-    cta_start = max(duration - 6, duration * 0.75)
-    layers.append(
-        ColorClip((W, 160), color=(15, 15, 35), duration=6)
-        .set_position(("left", H - 180)).set_start(cta_start)
-        .set_opacity(0.88).crossfadein(0.4)
-    )
-    layers.append(
-        TextClip(cta_text, fontsize=50, color="#FF6B35", font="DejaVu-Sans-Bold",
-                 method="caption", size=(W - 60, None), align="center",
-                 stroke_color="black", stroke_width=2)
-        .set_position(("center", H - 168))
-        .set_start(cta_start).set_duration(6).crossfadein(0.4)
-    )
-
-    def progress_frame(t):
-        frame = np.zeros((12, W, 3), dtype=np.uint8)
-        filled = int(W * (t / duration))
-        frame[:, :filled] = [255, 107, 53]
-        frame[:, filled:] = [30, 30, 50]
-        return frame
-
-    layers.append(VideoClip(progress_frame, duration=duration).set_fps(VIDEO_FPS).set_position(("left", H - 20)))
-
-    final = (CompositeVideoClip(layers, size=(W, H))
-             .set_duration(duration)
-             .set_audio(voice.subclip(0, duration)))
-
-    log.info("Rendering...")
-    final.write_videofile(
-        out_path, fps=VIDEO_FPS, codec="libx264", audio_codec="aac",
-        temp_audiofile=f"/tmp/{job_id}_a.m4a", remove_temp=True,
-        verbose=False, logger=None, preset="fast", threads=4,
-    )
-
-    if clip_path:
-        try: os.unlink(clip_path)
-        except: pass
-
-    log.info(f"Done: {out_path}")
+    size_mb = os.path.getsize(out_path) / (1024 * 1024)
+    log.info(f"Video rendered: {out_path} ({size_mb:.1f} MB)")
     return out_path
