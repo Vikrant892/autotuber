@@ -15,3 +15,21 @@ ANTHROPIC_API_KEY     = os.getenv("ANTHROPIC_API_KEY", "")
 PEXELS_API_KEY        = os.getenv("PEXELS_API_KEY", "")
 DASHBOARD_URL         = os.getenv("DASHBOARD_URL", "https://autotuber-dashboard.pages.dev")
 DASHBOARD_SECRET      = os.getenv("DASHBOARD_SECRET", "REDACTED_INGEST_SECRET")
+
+FALLBACK_TOPICS = [
+    "Ancient Roman gladiator secrets",
+    "Egyptian pyramid hidden chambers",
+    "Viking navigation mysteries",
+    "Medieval plague doctors",
+    "Ancient Greek inventors",
+    "Mongol empire war tactics",
+    "Ancient Chinese inventions",
+    "Spartan warrior training",
+    "Aztec human sacrifice rituals",
+    "Byzantine empire secrets",
+    "Ancient Mayan calendar truth",
+    "Roman emperor assassination plots",
+    "Medieval castle siege weapons",
+    "Ancient Persian empire secrets",
+    "Greek mythology hidden meanings",
+]
