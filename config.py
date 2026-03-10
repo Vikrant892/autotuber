@@ -33,3 +33,8 @@ FALLBACK_TOPICS = [
     "Ancient Persian empire secrets",
     "Greek mythology hidden meanings",
 ]
+
+TOKEN_FILE       = "data/youtube_token.json"
+OAUTH_FILE       = "data/client_secrets.json"
+YT_CATEGORY_ID   = "27"
+YT_PRIVACY       = "public"
