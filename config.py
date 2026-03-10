@@ -17,7 +17,7 @@ NICHE          = "History & Facts"
 # Paths
 OUTPUT_DIR    = "output"
 THUMBNAIL_DIR = "output/thumbnails"
-DB_PATH       = "data/jobs.db"
+DB_FILE = DB_PATH
 
 # API keys from environment
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
