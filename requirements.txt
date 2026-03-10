@@ -6,7 +6,7 @@ requests>=2.31.0
 # Trends
 pytrends>=4.9.2
 moviepy==1.0.3
-
+edge-tts>=6.1.12
 # Voice — ElevenLabs (replaces edge-tts)
 # No extra package needed, uses requests directly
 
