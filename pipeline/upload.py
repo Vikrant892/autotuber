@@ -5,6 +5,7 @@ Handles OAuth token refresh automatically.
 import os
 import json
 import logging
+import requests
 from pathlib import Path
 from config import (TOKEN_FILE, OAUTH_FILE, YT_CATEGORY_ID,
                     YT_PRIVACY, YT_LANGUAGE)
@@ -124,7 +125,7 @@ def notify_dashboard(job_data: dict) -> None:
     """Notify Cloudflare dashboard after successful upload."""
     import os
     dashboard_url = os.getenv("DASHBOARD_URL", "https://autotuber-dashboard.pages.dev")
-    secret = os.getenv("INGEST_SECRET", "REDACTED_INGEST_SECRET")
+    secret = os.getenv("INGEST_SECRET")
     try:
         r = requests.post(
             f"{dashboard_url}/api/ingest",

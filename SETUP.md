@@ -35,8 +35,8 @@ Settings → Secrets → Actions → New repository secret
 
 | Secret Name | Value |
 |-------------|-------|
-| ANTHROPIC_API_KEY | REDACTED_ANTHROPIC_KEY |
-| PEXELS_API_KEY | REDACTED_PEXELS_KEY |
+| ANTHROPIC_API_KEY | your-api-key-here |
+| PEXELS_API_KEY | your-api-key-here |
 | YOUTUBE_CLIENT_ID | (from Step 2) |
 | YOUTUBE_CLIENT_SECRET | (from Step 2) |
 | YOUTUBE_TOKEN_JSON | (from setup_youtube.py output) |
