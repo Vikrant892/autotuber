@@ -9,7 +9,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 import os
 from config import OUTPUT_DIR
-PEXELS_API_KEY = os.getenv("PEXELS_API_KEY", "REDACTED_PEXELS_KEY")
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 
 log = logging.getLogger(__name__)
 W, H = 1080, 1920

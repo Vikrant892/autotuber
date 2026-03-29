@@ -45,7 +45,7 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           DASHBOARD_URL: https://autotuber-dashboard.pages.dev
-          INGEST_SECRET: REDACTED_INGEST_SECRET
+          INGEST_SECRET: ${{ secrets.INGEST_SECRET }}
         run: python main.py
 
       - name: Upload logs
