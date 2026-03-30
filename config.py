@@ -11,8 +11,8 @@ NICHE                 = "History & Facts"
 OUTPUT_DIR            = "output"
 THUMBNAIL_DIR         = "output/thumbnails"
 DB_FILE               = "data/jobs.db"
-ANTHROPIC_API_KEY     = os.getenv("ANTHROPIC_API_KEY", "")
-PEXELS_API_KEY        = os.getenv("PEXELS_API_KEY", "")
+ANTHROPIC_API_KEY     = os.getenv("ANTHROPIC_API_KEY")
+PEXELS_API_KEY        = os.getenv("PEXELS_API_KEY")
 DASHBOARD_URL         = os.getenv("DASHBOARD_URL", "https://autotuber-dashboard.pages.dev")
 DASHBOARD_SECRET      = os.getenv("DASHBOARD_SECRET")
 
