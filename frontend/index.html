@@ -3,253 +3,283 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AutoTuber - AI Content Pipeline</title>
+<title>AutoTuber — AI Content Pipeline</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  :root{--bg:#0f0f0f;--red:#ff0000;--red-dim:#cc0000;--card:#282828;--card-hover:#333;--text:#fff;--text-dim:#aaa;--text-muted:#666}
-  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.6}
-  a{color:var(--red);text-decoration:none}
-
-  /* Scrollbar */
-  ::-webkit-scrollbar{width:8px}
-  ::-webkit-scrollbar-track{background:var(--bg)}
-  ::-webkit-scrollbar-thumb{background:var(--card);border-radius:4px}
-
-  /* NAV */
-  nav{position:fixed;top:0;width:100%;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(15,15,15,.92);backdrop-filter:blur(12px);border-bottom:1px solid #222}
-  .logo{display:flex;align-items:center;gap:.6rem;font-size:1.4rem;font-weight:800;letter-spacing:-.5px}
-  .logo svg{width:36px;height:36px}
-  .logo span{color:var(--red)}
-  nav .links{display:flex;gap:1.5rem}
-  nav .links a{color:var(--text-dim);font-size:.9rem;transition:color .2s}
-  nav .links a:hover{color:var(--text)}
-
-  /* HERO */
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;position:relative}
-  .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(255,0,0,.08) 0%,transparent 70%);pointer-events:none}
-  .hero h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:900;line-height:1.1;margin-bottom:1rem}
-  .hero h1 .accent{color:var(--red)}
-  .hero p{font-size:1.15rem;color:var(--text-dim);max-width:560px;margin-bottom:2.5rem}
-  .badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.3);border-radius:999px;padding:.4rem 1rem;font-size:.8rem;color:var(--red);margin-bottom:1.5rem;animation:pulse-badge 2s infinite}
-  @keyframes pulse-badge{0%,100%{box-shadow:0 0 0 0 rgba(255,0,0,.2)}50%{box-shadow:0 0 0 8px rgba(255,0,0,0)}}
-
-  /* PIPELINE */
-  .pipeline-section{padding:4rem 2rem;max-width:1100px;margin:0 auto}
-  .section-title{font-size:1.8rem;font-weight:800;margin-bottom:.5rem;text-align:center}
-  .section-sub{color:var(--text-dim);text-align:center;margin-bottom:3rem;font-size:1rem}
-  .pipeline{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin-bottom:3rem}
-  .pipe-step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:1.5rem 1rem;border-radius:16px;background:var(--card);border:1px solid #333;width:160px;position:relative;opacity:0;animation:stepIn .5s forwards}
-  .pipe-step:nth-child(1){animation-delay:.2s}
-  .pipe-step:nth-child(2){animation-delay:.6s}
-  .pipe-step:nth-child(3){animation-delay:1s}
-  .pipe-step:nth-child(4){animation-delay:1.4s}
-  .pipe-step:nth-child(5){animation-delay:1.8s}
-  @keyframes stepIn{to{opacity:1;transform:translateY(0)}}
-  .pipe-step{transform:translateY(20px)}
-  .pipe-step.active{border-color:var(--red);box-shadow:0 0 20px rgba(255,0,0,.15)}
-  .pipe-step .icon{font-size:2rem;margin-bottom:.5rem}
-  .pipe-step .step-name{font-weight:700;font-size:.9rem}
-  .pipe-step .step-time{font-size:.7rem;color:var(--text-muted);margin-top:.3rem}
-  .pipe-arrow{font-size:1.5rem;color:var(--red);margin:0 .3rem;opacity:0;animation:arrowIn .3s forwards}
-  .pipe-arrow:nth-of-type(1){animation-delay:.4s}
-  .pipe-arrow:nth-of-type(2){animation-delay:.8s}
-  .pipe-arrow:nth-of-type(3){animation-delay:1.2s}
-  .pipe-arrow:nth-of-type(4){animation-delay:1.6s}
-  @keyframes arrowIn{to{opacity:1}}
-
-  /* PROGRESS */
-  .run-card{background:var(--card);border-radius:16px;padding:2rem;border:1px solid #333;max-width:700px;margin:0 auto 4rem}
-  .run-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
-  .run-header h3{font-size:1rem;font-weight:700}
-  .run-status{font-size:.75rem;padding:.3rem .8rem;border-radius:999px;background:rgba(34,197,94,.15);color:#22c55e;font-weight:600}
-  .run-bar{margin-bottom:1rem}
-  .run-bar-label{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.4rem;color:var(--text-dim)}
-  .run-bar-track{height:6px;background:#1a1a1a;border-radius:3px;overflow:hidden}
-  .run-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--red-dim),var(--red));transition:width 1.5s ease}
-
-  /* STATS */
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;max-width:1100px;margin:0 auto 4rem;padding:0 2rem}
-  .stat-card{background:var(--card);border-radius:16px;padding:2rem;text-align:center;border:1px solid #333;transition:transform .2s,border-color .3s}
-  .stat-card:hover{transform:translateY(-4px);border-color:var(--red)}
-  .stat-num{font-size:2.8rem;font-weight:900;background:linear-gradient(135deg,var(--red),#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .stat-label{color:var(--text-dim);font-size:.9rem;margin-top:.3rem}
-
-  /* FEATURES */
-  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;max-width:1100px;margin:0 auto 4rem;padding:0 2rem}
-  .feature-card{background:var(--card);border-radius:16px;padding:2rem;border:1px solid #333;transition:border-color .3s,transform .2s}
-  .feature-card:hover{border-color:var(--red);transform:translateY(-3px)}
-  .feature-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;background:rgba(255,0,0,.1)}
-  .feature-card h3{font-size:1.05rem;font-weight:700;margin-bottom:.5rem}
-  .feature-card p{font-size:.85rem;color:var(--text-dim);line-height:1.5}
-
-  /* ACTIVITY */
-  .activity{max-width:800px;margin:0 auto 4rem;padding:0 2rem}
-  .log-entry{display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;background:var(--card);border-radius:12px;margin-bottom:.6rem;border:1px solid #333;font-size:.85rem;transition:border-color .2s}
-  .log-entry:hover{border-color:#555}
-  .log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-  .log-dot.success{background:#22c55e}
-  .log-dot.running{background:var(--red);animation:blink 1s infinite}
-  .log-dot.pending{background:var(--text-muted)}
-  @keyframes blink{50%{opacity:.3}}
-  .log-time{color:var(--text-muted);font-size:.75rem;margin-left:auto;white-space:nowrap}
-
-  /* FOOTER */
-  footer{text-align:center;padding:3rem 2rem;border-top:1px solid #222;color:var(--text-muted);font-size:.85rem}
-  footer a{color:var(--text-dim)}
-  footer .heart{color:var(--red)}
-
-  /* RESPONSIVE */
-  @media(max-width:700px){
-    .pipeline{flex-direction:column;gap:1rem}
-    .pipe-arrow{transform:rotate(90deg)}
-    nav .links{display:none}
-    .stats{grid-template-columns:1fr}
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #000000; --text: #F5F5F7; --secondary: #86868B;
+    --accent: #2997FF; --card-bg: rgba(28,28,30,0.8);
+    --card-border: rgba(255,255,255,0.08); --radius-card: 18px;
+    --radius-pill: 100px; --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+    --green: #30D158; --yellow: #FFD60A; --red: #FF453A; --orange: #FF9F0A;
   }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-decoration: none; transition: opacity 0.3s ease; }
+  a:hover { opacity: 0.8; }
 
-  /* FADE IN */
-  .fade-in{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s}
-  .fade-in.visible{opacity:1;transform:translateY(0)}
+  .hero { text-align: center; padding: 120px 24px 80px; max-width: 800px; margin: 0 auto; }
+  .hero h1 { font-size: clamp(48px, 8vw, 80px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+  .hero h1 span { background: linear-gradient(135deg, var(--accent), #BF5AF2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { font-size: 21px; color: var(--secondary); margin-top: 16px; max-width: 560px; margin-left: auto; margin-right: auto; }
+  .hero-actions { margin-top: 40px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: var(--radius-pill); font-size: 17px; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease; font-family: var(--font); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #0a84ff; transform: translateY(-1px); }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,0.2); }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.4); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; max-width: 960px; margin: 0 auto 100px; padding: 0 24px; }
+  .stat { text-align: center; }
+  .stat-value { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-label { font-size: 14px; color: var(--secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .section { max-width: 1080px; margin: 0 auto; padding: 80px 24px; }
+  .section-label { font-size: 14px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  .section-title { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: -0.02em; margin-top: 8px; }
+  .section-sub { font-size: 18px; color: var(--secondary); margin-top: 12px; max-width: 600px; }
+
+  /* Pipeline */
+  .pipeline { display: flex; align-items: flex-start; gap: 0; margin-top: 48px; flex-wrap: wrap; justify-content: center; }
+  .pipeline-stage { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 28px 24px; text-align: center; backdrop-filter: blur(20px); min-width: 160px; max-width: 190px; cursor: pointer; transition: all 0.3s ease; position: relative; }
+  .pipeline-stage:hover { border-color: rgba(255,255,255,0.16); transform: translateY(-4px); }
+  .pipeline-stage.active { border-color: var(--accent); box-shadow: 0 0 30px rgba(41,151,255,0.12); }
+  .pipeline-num { font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .pipeline-icon { margin-bottom: 10px; color: var(--text); }
+  .pipeline-icon svg { width: 28px; height: 28px; }
+  .pipeline-stage-name { font-size: 15px; font-weight: 600; }
+  .pipeline-arrow { color: var(--secondary); font-size: 20px; padding: 0 8px; margin-top: 36px; }
+  .stage-detail { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); padding: 32px; backdrop-filter: blur(20px); margin-top: 24px; display: none; }
+  .stage-detail.visible { display: block; }
+  .stage-detail h3 { font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+  .stage-detail p { font-size: 15px; color: var(--secondary); line-height: 1.7; }
+
+  /* Job Queue */
+  .queue-table { width: 100%; margin-top: 48px; border-collapse: collapse; }
+  .queue-table th { text-align: left; font-size: 12px; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.08em; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 600; }
+  .queue-table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 15px; vertical-align: middle; }
+  .queue-table tr { transition: background 0.3s ease; }
+  .queue-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .progress-cell { min-width: 120px; }
+  .progress-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 600; }
+  .badge-complete { background: rgba(48,209,88,0.15); color: var(--green); }
+  .badge-processing { background: rgba(41,151,255,0.15); color: var(--accent); }
+  .badge-queued { background: rgba(255,214,10,0.15); color: var(--yellow); }
+  .badge-failed { background: rgba(255,69,58,0.15); color: var(--red); }
+
+  /* Sample Output */
+  .sample-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-card); overflow: hidden; backdrop-filter: blur(20px); margin-top: 48px; max-width: 480px; }
+  .sample-thumb { width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 50%, #1c1c1e 100%); display: flex; align-items: center; justify-content: center; position: relative; }
+  .sample-thumb .play-btn { width: 56px; height: 56px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+  .sample-thumb .play-btn svg { margin-left: 3px; }
+  .sample-thumb .duration { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .sample-body { padding: 24px; }
+  .sample-body h4 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .sample-body p { font-size: 14px; color: var(--secondary); line-height: 1.6; }
+  .sample-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .sample-tag { background: rgba(255,255,255,0.06); padding: 4px 12px; border-radius: var(--radius-pill); font-size: 12px; color: var(--secondary); }
+
+  .tech-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 48px; }
+  .tech-chip { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-pill); padding: 10px 24px; font-size: 15px; font-weight: 500; backdrop-filter: blur(20px); }
+
+  footer { text-align: center; padding: 60px 24px; border-top: 1px solid rgba(255,255,255,0.06); margin-top: 40px; }
+  footer p { color: var(--secondary); font-size: 14px; }
+
+  @media (max-width: 768px) {
+    .pipeline { flex-direction: column; align-items: center; }
+    .pipeline-arrow { transform: rotate(90deg); padding: 6px 0; margin-top: 0; }
+    .queue-table { font-size: 13px; }
+    .queue-table th, .queue-table td { padding: 10px 8px; }
+    .hide-mobile { display: none; }
+  }
+  @media (max-width: 600px) {
+    .hero { padding: 80px 20px 60px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">
-    <svg viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#ff0000"/><polygon points="14,10 14,26 27,18" fill="#fff"/></svg>
-    <div>Auto<span>Tuber</span></div>
-  </div>
-  <div class="links">
-    <a href="#pipeline">Pipeline</a>
-    <a href="#features">Features</a>
-    <a href="#activity">Activity</a>
-    <a href="https://github.com/Vikrant892/autotuber" target="_blank">GitHub</a>
-  </div>
-</nav>
-
 <section class="hero">
-  <div class="badge">&#9679; Pipeline Active</div>
-  <h1>Automated YouTube<br><span class="accent">Content Factory</span></h1>
-  <p>Script generation, voiceover synthesis, video rendering, and scheduled uploads -- all on autopilot. One command, infinite content.</p>
-</section>
-
-<section class="pipeline-section" id="pipeline">
-  <h2 class="section-title fade-in">Pipeline Flow</h2>
-  <p class="section-sub fade-in">Each video passes through 5 automated stages</p>
-  <div class="pipeline fade-in">
-    <div class="pipe-step active" id="s1"><div class="icon">&#9997;</div><div class="step-name">Script</div><div class="step-time">~45s</div></div>
-    <div class="pipe-arrow">&#10142;</div>
-    <div class="pipe-step" id="s2"><div class="icon">&#127908;</div><div class="step-name">Voiceover</div><div class="step-time">~30s</div></div>
-    <div class="pipe-arrow">&#10142;</div>
-    <div class="pipe-step" id="s3"><div class="icon">&#127909;</div><div class="step-name">Render</div><div class="step-time">~2m</div></div>
-    <div class="pipe-arrow">&#10142;</div>
-    <div class="pipe-step" id="s4"><div class="icon">&#9729;</div><div class="step-name">Upload</div><div class="step-time">~1m</div></div>
-    <div class="pipe-arrow">&#10142;</div>
-    <div class="pipe-step" id="s5"><div class="icon">&#128197;</div><div class="step-name">Schedule</div><div class="step-time">instant</div></div>
-  </div>
-
-  <div class="run-card fade-in">
-    <div class="run-header">
-      <h3>Run #247 &mdash; "Top 10 Python Tips for Beginners"</h3>
-      <span class="run-status">&#10003; Complete</span>
-    </div>
-    <div class="run-bar"><div class="run-bar-label"><span>Script Generation</span><span>100%</span></div><div class="run-bar-track"><div class="run-bar-fill" style="width:100%"></div></div></div>
-    <div class="run-bar"><div class="run-bar-label"><span>TTS Voiceover</span><span>100%</span></div><div class="run-bar-track"><div class="run-bar-fill" style="width:100%"></div></div></div>
-    <div class="run-bar"><div class="run-bar-label"><span>FFmpeg Render</span><span>100%</span></div><div class="run-bar-track"><div class="run-bar-fill" style="width:100%"></div></div></div>
-    <div class="run-bar"><div class="run-bar-label"><span>YouTube Upload</span><span>100%</span></div><div class="run-bar-track"><div class="run-bar-fill" style="width:100%"></div></div></div>
+  <h1>Meet <span>AutoTuber</span></h1>
+  <p>An end-to-end AI pipeline that scripts, voices, renders, and uploads videos to YouTube automatically.</p>
+  <div class="hero-actions">
+    <a href="https://github.com/Vikrant892/autotuber" target="_blank" class="btn btn-primary">View on GitHub</a>
+    <a href="#pipeline" class="btn btn-secondary">See the Pipeline</a>
   </div>
 </section>
 
-<section class="fade-in">
-  <h2 class="section-title">Pipeline Stats</h2>
-  <p class="section-sub">Lifetime metrics from the content engine</p>
-  <div class="stats">
-    <div class="stat-card"><div class="stat-num" data-target="247">0</div><div class="stat-label">Videos Generated</div></div>
-    <div class="stat-card"><div class="stat-num" data-target="182">0</div><div class="stat-label">Hours of Content</div></div>
-    <div class="stat-card"><div class="stat-num" data-target="98.6" data-suffix="%">0</div><div class="stat-label">Upload Success Rate</div></div>
-    <div class="stat-card"><div class="stat-num" data-target="4.2" data-suffix="min">0</div><div class="stat-label">Avg Processing Time</div></div>
+<div class="stats">
+  <div class="stat"><div class="stat-value">142</div><div class="stat-label">Videos Generated</div></div>
+  <div class="stat"><div class="stat-value">1.2M</div><div class="stat-label">Total Views</div></div>
+  <div class="stat"><div class="stat-value">98.4%</div><div class="stat-label">Upload Success</div></div>
+  <div class="stat"><div class="stat-value">8 min</div><div class="stat-label">Avg Processing</div></div>
+</div>
+
+<section class="section" id="pipeline">
+  <div class="section-label">Architecture</div>
+  <div class="section-title">Five stages. Fully automated.</div>
+  <div class="section-sub">Click any stage to see how it works under the hood.</div>
+  <div class="pipeline" id="pipelineFlow"></div>
+  <div class="stage-detail" id="stageDetail">
+    <h3 id="detailTitle"></h3>
+    <p id="detailDesc"></p>
   </div>
 </section>
 
-<section id="features" class="fade-in">
-  <h2 class="section-title">Core Features</h2>
-  <p class="section-sub">Everything needed for autonomous video creation</p>
-  <div class="features">
-    <div class="feature-card">
-      <div class="feature-icon">&#129302;</div>
-      <h3>AI Script Generation</h3>
-      <p>AI-driven scripts tailored to your niche. Provide a topic, get a full video script with hooks, segments, and CTAs.</p>
+<section class="section">
+  <div class="section-label">Dashboard</div>
+  <div class="section-title">Pipeline status</div>
+  <div class="section-sub">Simulated job queue showing active processing runs.</div>
+  <table class="queue-table">
+    <thead>
+      <tr>
+        <th>Video Title</th>
+        <th>Stage</th>
+        <th class="hide-mobile">Progress</th>
+        <th class="hide-mobile">ETA</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="queueBody"></tbody>
+  </table>
+</section>
+
+<section class="section">
+  <div class="section-label">Preview</div>
+  <div class="section-title">Sample output</div>
+  <div class="section-sub">A generated video card ready for upload to YouTube.</div>
+  <div class="sample-card">
+    <div class="sample-thumb">
+      <div class="play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="#F5F5F7"><polygon points="8,5 20,12 8,19"/></svg></div>
+      <div class="duration">12:34</div>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">&#127897;</div>
-      <h3>TTS Voiceover</h3>
-      <p>Natural-sounding text-to-speech with multiple voice options. Supports pacing, emphasis, and pronunciation tuning.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">&#127916;</div>
-      <h3>FFmpeg Rendering</h3>
-      <p>Automated video composition with background footage, text overlays, transitions, and branded intros/outros.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">&#128272;</div>
-      <h3>YouTube API Upload</h3>
-      <p>Direct upload via YouTube Data API v3 with metadata, thumbnails, tags, and scheduled publishing times.</p>
+    <div class="sample-body">
+      <h4>10 Emerging Programming Languages to Learn in 2026</h4>
+      <p>A deep dive into the programming languages gaining real traction this year, from systems-level newcomers to AI-native frameworks reshaping how we build software.</p>
+      <div class="sample-tags">
+        <span class="sample-tag">programming</span>
+        <span class="sample-tag">technology</span>
+        <span class="sample-tag">2026</span>
+        <span class="sample-tag">languages</span>
+        <span class="sample-tag">tutorial</span>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="activity" class="activity fade-in">
-  <h2 class="section-title" style="text-align:left">Recent Activity</h2>
-  <p class="section-sub" style="text-align:left">Live pipeline events</p>
-  <div class="log-entry"><span class="log-dot running"></span>Rendering: "5 JavaScript Tricks You Didn't Know"<span class="log-time">just now</span></div>
-  <div class="log-entry"><span class="log-dot success"></span>Uploaded: "Top 10 Python Tips for Beginners"<span class="log-time">4 min ago</span></div>
-  <div class="log-entry"><span class="log-dot success"></span>Voiceover complete: "Docker in 10 Minutes"<span class="log-time">12 min ago</span></div>
-  <div class="log-entry"><span class="log-dot success"></span>Script generated: "React vs Vue in 2026"<span class="log-time">18 min ago</span></div>
-  <div class="log-entry"><span class="log-dot success"></span>Scheduled publish: "Git for Beginners" at 9:00 AM<span class="log-time">25 min ago</span></div>
-  <div class="log-entry"><span class="log-dot success"></span>Uploaded: "Linux Commands Cheat Sheet"<span class="log-time">1 hr ago</span></div>
-  <div class="log-entry"><span class="log-dot success"></span>Rendered: "SQL Joins Explained" (1080p, 8:42)<span class="log-time">1.5 hr ago</span></div>
+<section class="section">
+  <div class="section-label">Built With</div>
+  <div class="section-title">Tech Stack</div>
+  <div class="tech-row">
+    <span class="tech-chip">Python</span>
+    <span class="tech-chip">LLM APIs</span>
+    <span class="tech-chip">FFmpeg</span>
+    <span class="tech-chip">YouTube Data API</span>
+  </div>
 </section>
 
 <footer>
-  <p>Built by <strong>Vikrant Sharma</strong> &middot; <a href="https://github.com/Vikrant892/autotuber" target="_blank">View on GitHub</a></p>
+  <p>Built by Vikrant Sharma &nbsp;&middot;&nbsp; <a href="https://github.com/Vikrant892/autotuber" target="_blank">GitHub</a></p>
 </footer>
 
 <script>
-// Intersection Observer for fade-in
-const obs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }});
-}, { threshold: 0.15 });
-document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+var stages = [
+  { num: '01', name: 'Script Generation',
+    icon: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="18" height="22" rx="3"/><line x1="9" y1="9" x2="19" y2="9"/><line x1="9" y1="13" x2="17" y2="13"/><line x1="9" y1="17" x2="14" y2="17"/></svg>',
+    title: 'Script Generation (LLM)',
+    desc: 'A large language model receives a topic prompt and produces a structured script with intro, sections, transitions, and conclusion. The output includes speaker notes, on-screen text cues, and timing markers. Multiple drafts are generated and scored for engagement potential before selecting the best candidate.' },
+  { num: '02', name: 'Voiceover',
+    icon: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="4" width="8" height="14" rx="4"/><path d="M17 12a8 8 0 01-16 0"/><line x1="9" y1="22" x2="9" y2="26"/><line x1="5" y1="26" x2="13" y2="26"/></svg>',
+    title: 'Voiceover (TTS)',
+    desc: 'The finalized script is fed into a text-to-speech engine that produces natural-sounding narration. Prosody, pacing, and emphasis are controlled through SSML tags embedded during script generation. The audio is normalized, trimmed of silence, and exported as high-quality WAV for the rendering stage.' },
+  { num: '03', name: 'Video Rendering',
+    icon: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="24" height="18" rx="3"/><polygon points="11,10 19,14 11,18" fill="none" stroke="currentColor"/></svg>',
+    title: 'Video Rendering (FFmpeg)',
+    desc: 'FFmpeg composites the voiceover audio with stock footage, generated visuals, and text overlays. Each section of the script maps to a visual segment with transitions, lower-thirds, and chapter markers. The pipeline renders at 1080p 60fps and outputs an MP4 with embedded chapter metadata.' },
+  { num: '04', name: 'Upload',
+    icon: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 18V6"/><polyline points="8,10 14,4 20,10"/><path d="M4 22h20"/></svg>',
+    title: 'Upload (YouTube API)',
+    desc: 'The rendered video is uploaded via the YouTube Data API v3 with auto-generated metadata: title, description, tags, category, and thumbnail. The upload uses resumable sessions to handle interruptions gracefully. Privacy is set to unlisted initially for review, then switched to public on schedule.' },
+  { num: '05', name: 'Schedule',
+    icon: '<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="14" cy="14" r="10"/><polyline points="14,8 14,14 19,17"/></svg>',
+    title: 'Schedule and Monitor',
+    desc: 'Videos are queued for publication at optimal times based on audience analytics. After publishing, the monitor tracks view count, watch time, CTR, and engagement metrics. Alerts fire if performance drops below baseline, and the system feeds results back into the script generator to improve future content.' },
+];
 
-// Counter animation
-function animateCounters() {
-  document.querySelectorAll('.stat-num').forEach(el => {
-    const target = parseFloat(el.dataset.target);
-    const suffix = el.dataset.suffix || '';
-    const isFloat = target % 1 !== 0;
-    const duration = 2000;
-    const start = performance.now();
-    function tick(now) {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = eased * target;
-      el.textContent = (isFloat ? current.toFixed(1) : Math.floor(current)) + suffix;
-      if (progress < 1) requestAnimationFrame(tick);
+var pipelineFlow = document.getElementById('pipelineFlow');
+var stageDetail = document.getElementById('stageDetail');
+var detailTitle = document.getElementById('detailTitle');
+var detailDesc = document.getElementById('detailDesc');
+var activeStage = null;
+
+stages.forEach(function(s, i) {
+  if (i > 0) {
+    var arrow = document.createElement('div');
+    arrow.className = 'pipeline-arrow';
+    arrow.innerHTML = '&rarr;';
+    pipelineFlow.appendChild(arrow);
+  }
+  var el = document.createElement('div');
+  el.className = 'pipeline-stage';
+  el.setAttribute('data-index', i);
+  el.innerHTML =
+    '<div class="pipeline-num">Stage ' + s.num + '</div>' +
+    '<div class="pipeline-icon">' + s.icon + '</div>' +
+    '<div class="pipeline-stage-name">' + s.name + '</div>';
+  el.addEventListener('click', function() {
+    var allStages = document.querySelectorAll('.pipeline-stage');
+    allStages.forEach(function(node) { node.classList.remove('active'); });
+    if (activeStage === i) {
+      activeStage = null;
+      stageDetail.classList.remove('visible');
+      return;
     }
-    requestAnimationFrame(tick);
+    activeStage = i;
+    el.classList.add('active');
+    detailTitle.textContent = s.title;
+    detailDesc.textContent = s.desc;
+    stageDetail.classList.add('visible');
   });
-}
-const statsObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { animateCounters(); statsObs.unobserve(e.target); }});
-}, { threshold: 0.3 });
-document.querySelector('.stats') && statsObs.observe(document.querySelector('.stats'));
+  pipelineFlow.appendChild(el);
+});
 
-// Pipeline step highlight animation
-let currentStep = 0;
-const steps = document.querySelectorAll('.pipe-step');
-setInterval(() => {
-  steps.forEach(s => s.classList.remove('active'));
-  steps[currentStep].classList.add('active');
-  currentStep = (currentStep + 1) % steps.length;
+/* Job Queue */
+var jobs = [
+  { title: 'Top 5 AI Frameworks Compared', stage: 'Complete', progress: 100, eta: '--', status: 'complete' },
+  { title: 'Building a REST API from Scratch', stage: 'Upload', progress: 87, eta: '2 min', status: 'processing' },
+  { title: 'Linux Commands Every Dev Needs', stage: 'Rendering', progress: 54, eta: '6 min', status: 'processing' },
+  { title: 'Docker vs Podman: The Full Story', stage: 'Voiceover', progress: 31, eta: '11 min', status: 'processing' },
+  { title: 'Rust Memory Safety Explained', stage: 'Queued', progress: 0, eta: '18 min', status: 'queued' },
+  { title: 'WebAssembly Performance Myths', stage: 'Failed', progress: 22, eta: '--', status: 'failed' },
+];
+
+var queueBody = document.getElementById('queueBody');
+jobs.forEach(function(j) {
+  var barColor = j.status === 'complete' ? 'var(--green)' :
+                 j.status === 'failed' ? 'var(--red)' :
+                 j.status === 'queued' ? 'var(--yellow)' : 'var(--accent)';
+  var tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td>' + j.title + '</td>' +
+    '<td style="color:var(--secondary)">' + j.stage + '</td>' +
+    '<td class="progress-cell hide-mobile"><div class="progress-bg"><div class="progress-fill" style="width:' + j.progress + '%;background:' + barColor + '"></div></div></td>' +
+    '<td class="hide-mobile" style="color:var(--secondary)">' + j.eta + '</td>' +
+    '<td><span class="badge badge-' + j.status + '">' + j.status.charAt(0).toUpperCase() + j.status.slice(1) + '</span></td>';
+  queueBody.appendChild(tr);
+});
+
+/* Animate processing jobs */
+setInterval(function() {
+  var fills = queueBody.querySelectorAll('.progress-fill');
+  jobs.forEach(function(j, i) {
+    if (j.status === 'processing' && j.progress < 100) {
+      j.progress = Math.min(j.progress + Math.random() * 2, 99.5);
+      if (fills[i]) fills[i].style.width = j.progress + '%';
+    }
+  });
 }, 2000);
 </script>
 </body>
