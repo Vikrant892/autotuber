@@ -3,178 +3,206 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>autotuber mkII — broadcast control</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>AutoTuber — AI Content Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=General+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#2a2a2a;color:#d8d8d8;font-family:'Inter',Segoe UI,sans-serif;font-size:12.5px;line-height:1.5;min-height:100vh}
-.rack{background:#1f1f1f;border-bottom:1px solid #101010;height:44px;display:flex;align-items:center;padding:0 16px;gap:24px;justify-content:space-between}
-.brand{font-family:'Inter',sans-serif;font-weight:600;letter-spacing:.22em;color:#d8d8d8;font-size:11px;text-transform:uppercase}
-.brand .v{color:#999;letter-spacing:.05em;margin-left:8px}
-.leds{display:flex;gap:14px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#999;letter-spacing:.08em}
-.led{display:inline-flex;align-items:center;gap:5px}
-.led .d{width:8px;height:8px;background:#444}
-.led.on .d{background:#2d8655}
-.led.amber .d{background:#d68912}
-.led.red .d{background:#cc3333}
-.led.blink .d{animation:blink 1.2s infinite}
-@keyframes blink{50%{opacity:.25}}
-.tc{font-family:'IBM Plex Mono',monospace;color:#d8d8d8;font-size:12px;letter-spacing:.04em}
+:root{
+  --bg:#0d0d14; --panel:#16161f; --panel2:#1f1f2c; --line:#2c2c3d;
+  --ink:#f2f0ed; --dim:#8b8899;
+  --red:#ee3d4e;
+  --gold:#f9b54a;
+  --mint:#4dd5a0;
+  --purple:#a27ef5;
+}
+html,body{background:var(--bg);color:var(--ink);font-family:'General Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;min-height:100vh;overflow-x:hidden}
+.wrap{max-width:1260px;margin:0 auto;padding:26px 28px 60px}
 
-.grid{display:grid;grid-template-columns:260px 1fr 260px;grid-template-rows:calc(100vh - 90px);gap:0}
-.col{background:#353535;border-right:1px solid #1a1a1a;overflow:auto}
-.col:last-child{border-right:0}
-.colh{padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#999;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #1a1a1a}
-.jobs{padding:4px 0}
-.job{padding:7px 14px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;gap:8px;align-items:baseline;border-left:2px solid transparent}
-.job:hover{background:#3d3d3d}
-.job.sel{background:#3d3d3d;border-left-color:#d8d8d8}
-.job .num{color:#777;font-variant-numeric:tabular-nums;width:32px}
-.job .title{flex:1;color:#d8d8d8}
-.job .st{font-size:10.5px;letter-spacing:.04em}
-.st-q{color:#888}
-.st-r{color:#d68912}
-.st-d{color:#2d8655}
-.st-f{color:#cc3333}
-.dot{display:inline-block;width:7px;height:7px;margin-right:4px;vertical-align:middle}
-.dot.q{background:#666}
-.dot.r{background:#d68912}
-.dot.d{background:#2d8655}
-.dot.f{background:#cc3333}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.brand{display:flex;gap:14px;align-items:center}
+.bm{width:46px;height:46px;background:var(--red);border-radius:12px;position:relative;display:flex;align-items:center;justify-content:center}
+.bm::before{content:'';position:absolute;width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:3px}
+.brand h1{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.brand small{display:block;color:var(--dim);font-size:12px;font-family:'JetBrains Mono',monospace;margin-top:-2px}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--panel);border-radius:10px}
+.tabs a{padding:8px 14px;color:var(--dim);font-size:13px;cursor:pointer;border-radius:8px;font-weight:500}
+.tabs a.on{background:var(--red);color:#fff}
 
-.prog{padding:16px 24px;background:#2e2e2e;overflow:auto}
-.prog h3{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#d8d8d8;font-weight:500;letter-spacing:.02em;margin-bottom:10px}
-.prog h3 .tc{color:#999;margin-left:14px;font-size:11.5px}
-.wave{background:#1f1f1f;border:1px solid #1a1a1a;height:90px;padding:6px 0;margin:10px 0}
-.trans{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#bbb;padding:10px 0;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;margin:10px 0;display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-.trans .stg{padding:3px 8px;border:1px solid #444}
-.trans .stg.on{border-color:#d68912;color:#d68912}
-.trans .stg.done{color:#2d8655;border-color:#2d8655}
-.trans .sep{color:#555}
-.log{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#bbb;background:#1f1f1f;border:1px solid #1a1a1a;padding:10px 14px;height:260px;overflow:auto;white-space:pre-wrap}
-.log .t{color:#777}
-.log .k{color:#d68912}
-.log .g{color:#2d8655}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;margin-bottom:32px;align-items:center}
+.hero h2{font-size:48px;font-weight:700;letter-spacing:-.03em;line-height:1;margin-bottom:14px}
+.hero h2 em{color:var(--red);font-style:normal}
+.hero p{color:var(--dim);font-size:16px;max-width:480px;margin-bottom:22px}
+.hstats{display:flex;gap:32px;flex-wrap:wrap}
+.hstats div{border-left:3px solid var(--red);padding-left:12px}
+.hstats .n{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-.02em}
+.hstats .l{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;font-weight:600}
 
-.patch{padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#bbb;line-height:1.6}
-.patch .sec{color:#999;margin:10px 0 4px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
-.patch .e{display:flex;justify-content:space-between}
-.patch .e .d{color:#888}
-.patch .on{color:#d8d8d8}
+/* Video card preview */
+.vpreview{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;position:relative}
+.vpreview .thumb{aspect-ratio:16/9;background:var(--panel2);border-radius:12px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.vpreview .thumb::before{content:'';position:absolute;left:0;right:0;top:0;bottom:0;background:repeating-linear-gradient(45deg,transparent 0 20px,rgba(255,255,255,.02) 20px 21px)}
+.vpreview .play{width:60px;height:60px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);position:relative;z-index:1}
+.vpreview .play::before{content:'';width:0;height:0;border-left:18px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px}
+.vpreview .duration{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.8);padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;z-index:1}
+.vpreview .title{font-weight:700;font-size:15px;margin-bottom:4px}
+.vpreview .meta{color:var(--dim);font-size:12.5px;font-family:'JetBrains Mono',monospace;margin-bottom:10px}
+.vpreview .tags{display:flex;gap:4px;flex-wrap:wrap}
+.vpreview .tags span{padding:2px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:100px;font-size:10.5px;color:var(--dim);font-family:'JetBrains Mono',monospace}
 
-.bottom{background:#1f1f1f;border-top:1px solid #101010;height:46px;display:flex;align-items:center;padding:0 16px;gap:10px;justify-content:space-between;flex-wrap:wrap}
-.bottom .btnrow{display:flex;gap:6px}
-.tbtn{background:#2a2a2a;border:1px solid #444;color:#d8d8d8;padding:6px 14px;font:inherit;font-size:12px;cursor:pointer;border-radius:0;font-family:'IBM Plex Mono',monospace}
-.tbtn:hover{border-color:#d8d8d8}
-.tbtn.rec{color:#cc3333}
-.tbtn.rec:hover{border-color:#cc3333}
-.bottom .meta{color:#999;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em}
-.bottom .meta a{color:#d8d8d8;text-decoration:none}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.st{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.st .l{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.st .l .tr{color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700}
+.st .n{font-size:32px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-.02em;line-height:1}
+.st.r .n{color:var(--red)}
+.st.g .n{color:var(--gold)}
+.st.m .n{color:var(--mint)}
+.st.p .n{color:var(--purple)}
 
-@media(max-width:900px){.grid{grid-template-columns:1fr;grid-template-rows:auto}.col{border-right:0;border-bottom:1px solid #1a1a1a}}
+/* Pipeline */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 28px;margin-bottom:22px}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+.ph h3{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.ph small{color:var(--dim);font-size:13px;display:block;margin-top:3px;font-weight:400}
+.ph .legend{display:flex;gap:12px;font-size:11.5px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.ph .legend span::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.ph .legend .done::before{background:var(--mint)}
+.ph .legend .run::before{background:var(--gold);animation:pulse 1.4s infinite}
+.ph .legend .wait::before{background:var(--line)}
+@keyframes pulse{50%{opacity:.4}}
+
+.pipe{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:12px;align-items:center}
+.ps{background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:18px;position:relative;transition:border-color .2s}
+.ps.done{border-color:var(--mint)}
+.ps.done::before{content:'✓';position:absolute;top:12px;right:12px;width:22px;height:22px;background:var(--mint);color:var(--bg);border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ps.run{border-color:var(--gold)}
+.ps.run::before{content:'';position:absolute;top:12px;right:12px;width:22px;height:22px;border:3px solid var(--gold);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ps .ic{width:30px;height:30px;background:var(--panel);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--purple)}
+.ps.done .ic{color:var(--mint)}
+.ps.run .ic{color:var(--gold)}
+.ps h5{font-size:14px;font-weight:700;margin-bottom:2px}
+.ps small{color:var(--dim);font-size:11.5px;font-family:'JetBrains Mono',monospace;display:block;margin-bottom:8px}
+.ps .bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.ps .bar div{height:100%;background:var(--gold);border-radius:2px;transition:width .8s ease}
+.ps.done .bar div{background:var(--mint);width:100%}
+.ar{color:var(--dim);font-size:20px;text-align:center}
+
+/* Job queue */
+.jobs table{width:100%;border-collapse:collapse;font-size:13.5px}
+.jobs th{text-align:left;padding:10px 0;color:var(--dim);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;border-bottom:1px solid var(--line)}
+.jobs td{padding:14px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+.jobs tr:last-child td{border-bottom:0}
+.jobs .title{font-weight:600}
+.jobs .stage{display:inline-flex;align-items:center;gap:8px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.jobs .stage.sc{background:rgba(162,126,245,.14);color:var(--purple)}
+.jobs .stage.vc{background:rgba(249,181,74,.14);color:var(--gold)}
+.jobs .stage.rd{background:rgba(238,61,78,.14);color:var(--red)}
+.jobs .stage.up{background:rgba(77,213,160,.14);color:var(--mint)}
+.jobs .stage.dn{background:rgba(77,213,160,.14);color:var(--mint)}
+.jobs .stage.fl{background:rgba(238,61,78,.14);color:var(--red)}
+.jobs .pbar{width:120px;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.jobs .pbar div{height:100%;background:var(--red);border-radius:3px}
+.jobs .eta{font-family:'JetBrains Mono',monospace;color:var(--dim);font-size:12px}
+
+/* Queue chart */
+.qchart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:14px 0}
+.qchart div{flex:1;background:var(--red);border-radius:2px 2px 0 0;opacity:.5;transition:opacity .2s}
+.qchart div:hover{opacity:1}
+
+.foot{margin-top:20px;padding:22px 0 0;border-top:1px solid var(--line);color:var(--dim);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.foot a{color:var(--ink)}
+
+@media(max-width:900px){.hero{grid-template-columns:1fr}.hero h2{font-size:34px}.stats{grid-template-columns:1fr 1fr}.pipe{grid-template-columns:1fr;gap:8px}.ar{transform:rotate(90deg)}}
 </style>
 </head>
 <body>
-<header class="rack">
-<div class="brand">AUTOTUBER MKII<span class="v">v2.3.1</span></div>
-<div class="leds">
-<span class="led on"><span class="d"></span>PWR</span>
-<span class="led blink on"><span class="d"></span>NET</span>
-<span class="led amber"><span class="d"></span>API</span>
-<span class="led" id="rec"><span class="d"></span>REC</span>
-<span class="tc" id="tc">TC 00:00:00:00</span>
-</div>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand"><div class="bm"></div><div><h1>AutoTuber</h1><small>automated youtube pipeline · v2.3.1</small></div></div>
+  <div class="tabs"><a class="on">Dashboard</a><a>Jobs</a><a>Assets</a><a>Settings</a></div>
 </header>
 
-<main class="grid">
-<div class="col">
-<div class="colh">jobs (4)</div>
-<div class="jobs" id="jobs"></div>
-</div>
+<section class="hero">
+  <div>
+    <h2>From <em>script</em><br>to <em>upload</em><br>overnight.</h2>
+    <p>End-to-end YouTube pipeline: LLM generates script → neural TTS voiceover → FFmpeg video render → YouTube Data API upload → scheduled publish. One Python job runs the whole chain.</p>
+    <div class="hstats">
+      <div><div class="n">287</div><div class="l">Videos rendered</div></div>
+      <div><div class="n">1.4M</div><div class="l">Total views</div></div>
+      <div><div class="n">98%</div><div class="l">Upload success</div></div>
+      <div><div class="n">3.2×</div><div class="l">Realtime render</div></div>
+    </div>
+  </div>
+  <div class="vpreview">
+    <div class="thumb"><div class="play"></div><div class="duration">8:24</div></div>
+    <div class="title">Python Data Pipelines in 8 Minutes</div>
+    <div class="meta">scheduled · 2025-04-21 · 09:00 AEST</div>
+    <div class="tags"><span>python</span><span>etl</span><span>tutorial</span><span>beginner</span></div>
+  </div>
+</section>
 
-<div class="col prog">
-<h3 id="title">— select a job —<span class="tc" id="jtc"></span></h3>
-<svg class="wave" id="wave" viewBox="0 0 800 90" preserveAspectRatio="none"></svg>
-<div class="trans" id="trans"></div>
-<div class="log" id="log"></div>
-</div>
+<section class="stats">
+  <div class="st r"><div class="l">Active Jobs<span class="tr">▲ 2</span></div><div class="n">4</div></div>
+  <div class="st g"><div class="l">In Queue</div><div class="n">12</div></div>
+  <div class="st m"><div class="l">Avg Duration<span class="tr">3:14</span></div><div class="n">5m</div></div>
+  <div class="st p"><div class="l">API Quota<span class="tr">26%</span></div><div class="n">2,640<span style="color:var(--dim);font-size:14px;font-weight:500">/10k</span></div></div>
+</section>
 
-<div class="col">
-<div class="colh">patch panel</div>
-<div class="patch">
-<div class="sec">source</div>
-<div class="e"><span>llm · claude-sonnet</span><span class="d on">◉</span></div>
-<div class="e"><span>voice · natashaNeural</span><span class="d on">◉</span></div>
-<div class="e"><span>bgm · library03</span><span class="d">○</span></div>
-<div class="sec">render</div>
-<div class="e"><span>ffmpeg x264</span><span class="d on">◉</span></div>
-<div class="e"><span>crf · 23</span><span class="d on">◉</span></div>
-<div class="e"><span>res · 1920×1080</span><span class="d on">◉</span></div>
-<div class="e"><span>fps · 30</span><span class="d on">◉</span></div>
-<div class="sec">destination</div>
-<div class="e"><span>youtube · main</span><span class="d on">◉</span></div>
-<div class="e"><span>quota · 2140/10000 units</span><span class="d">·</span></div>
-<div class="sec" style="margin-top:16px">technical</div>
-<div style="color:#888;font-size:11px;line-height:1.55">pipeline latency:<br>script → script+voice  8-12s<br>voice → render  3-4× realtime (cpu)<br>upload gated by yt api quota (10k units/day)</div>
-</div>
-</div>
-</main>
+<section class="panel">
+  <div class="ph">
+    <div><h3>Current Job · Python Data Pipelines</h3><small>Running stage: FFmpeg render · 37% · ETA 2m 18s</small></div>
+    <div class="legend"><span class="done">done</span><span class="run">running</span><span class="wait">waiting</span></div>
+  </div>
+  <div class="pipe">
+    <div class="ps done"><div class="ic">LLM</div><h5>Script</h5><small>847 tokens</small><div class="bar"><div></div></div></div>
+    <div class="ar">→</div>
+    <div class="ps done"><div class="ic">TTS</div><h5>Voiceover</h5><small>14 chunks · en-AU</small><div class="bar"><div></div></div></div>
+    <div class="ar">→</div>
+    <div class="ps run"><div class="ic">FFmpeg</div><h5>Render</h5><small>frame 3,552 / 9,600</small><div class="bar"><div style="width:37%"></div></div></div>
+  </div>
+  <div class="pipe" style="margin-top:14px;grid-template-columns:1fr auto 1fr auto 1fr">
+    <div class="ps"><div class="ic">YT</div><h5>Upload</h5><small>awaiting render</small><div class="bar"><div style="width:0%"></div></div></div>
+    <div class="ar">→</div>
+    <div class="ps"><div class="ic">⏱</div><h5>Schedule</h5><small>publish 09:00 AEST</small><div class="bar"><div style="width:0%"></div></div></div>
+    <div></div><div></div><div></div>
+  </div>
+</section>
 
-<footer class="bottom">
-<div class="btnrow">
-<button class="tbtn" onclick="control('stop')">◼ STOP</button>
-<button class="tbtn" onclick="control('pause')">⏸ PAUSE</button>
-<button class="tbtn" onclick="control('play')">▶ PLAY</button>
-<button class="tbtn rec" onclick="control('rec')">⏺ REC</button>
-</div>
-<div class="meta">queue: <b id="qct">0</b> jobs &middot; eta: <span id="eta">—</span> &middot; <a href="https://github.com/Vikrant892/autotuber">autotuber · vikrant sharma · github</a></div>
+<section class="panel jobs">
+  <div class="ph"><div><h3>Job Queue</h3><small>Scheduled + active renders</small></div></div>
+  <table>
+    <thead><tr><th>Title</th><th>Stage</th><th>Progress</th><th>ETA</th></tr></thead>
+    <tbody>
+      <tr><td class="title">Python Data Pipelines in 8 Minutes</td><td><span class="stage rd">render</span></td><td><div class="pbar"><div style="width:37%"></div></div></td><td class="eta">2m 18s</td></tr>
+      <tr><td class="title">What is CVE? Explained in 3 minutes</td><td><span class="stage vc">voiceover</span></td><td><div class="pbar"><div style="width:72%"></div></div></td><td class="eta">48s</td></tr>
+      <tr><td class="title">Anatomy of a SQL Injection</td><td><span class="stage sc">script</span></td><td><div class="pbar"><div style="width:15%"></div></div></td><td class="eta">3m 10s</td></tr>
+      <tr><td class="title">I built a neural net over the weekend</td><td><span class="stage up">upload</span></td><td><div class="pbar"><div style="width:89%"></div></div></td><td class="eta">30s</td></tr>
+      <tr><td class="title">Top 10 Python one-liners for data engineers</td><td><span class="stage dn">done</span></td><td><div class="pbar"><div style="width:100%"></div></div></td><td class="eta">published</td></tr>
+      <tr><td class="title">How Phishing Emails Actually Work</td><td><span class="stage fl">failed</span></td><td><div class="pbar"><div style="width:40%;background:var(--red)"></div></div></td><td class="eta">retry ↻</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <div class="ph"><div><h3>7-Day Throughput</h3><small>Videos published per day</small></div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--dim)">Rolling avg: 14/day</div></div>
+  <div class="qchart" id="qchart"></div>
+  <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:8px">
+    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+  </div>
+</section>
+
+<footer class="foot">
+  <span>AutoTuber · Vikrant Sharma · Python + FFmpeg + YouTube API v3</span>
+  <span><a href="https://github.com/Vikrant892/autotuber">github.com/Vikrant892/autotuber</a></span>
 </footer>
+</div>
 
 <script>
-const JOBS=[
-  {id:'001',title:'Python Data Pipeline in 8 minutes',stage:2,prog:0.28,status:'r',duration:504,stages:['script','voice','render','upload','live']},
-  {id:'002',title:'What is CVE? (explained in 3 min)',stage:0,prog:0,status:'q',duration:188,stages:['script','voice','render','upload','live']},
-  {id:'003',title:'Anatomy of a SQL Injection',stage:4,prog:1,status:'d',duration:310,stages:['script','voice','render','upload','live']},
-  {id:'004',title:'I built a neural net over the weekend',stage:1,prog:0.4,status:'f',duration:420,stages:['script','voice','render','upload','live']},
-];
-let sel=0,playing=false,tc=0;
-function fmt(s){const h=Math.floor(s/3600),m=Math.floor(s/60)%60,sc=Math.floor(s)%60,f=Math.floor((s%1)*30);return [h,m,sc,f].map(n=>String(n).padStart(2,'0')).join(':')}
-function renderJobs(){document.getElementById('jobs').innerHTML=JOBS.map((j,i)=>'<div class="job'+(i===sel?' sel':'')+'" onclick="pick('+i+')"><span class="dot '+j.status+'"></span><span class="num">'+j.id+'</span><span class="title">'+j.title+'</span><span class="st st-'+j.status+'">'+stLabel(j)+'</span></div>').join('')}
-function stLabel(j){if(j.status==='r')return '['+(j.prog*100|0)+'%]';if(j.status==='q')return '[queued]';if(j.status==='d')return '[done]';if(j.status==='f')return '[failed] retry';return ''}
-function pick(i){sel=i;renderJobs();renderProg()}
-function wave(){const n=120,pts=[];const j=JOBS[sel];const seed=parseInt(j.id,10)*31;for(let i=0;i<n;i++){const x=i/(n-1)*800;const amp=(Math.sin(i*0.35+seed)+Math.sin(i*0.11)+Math.sin(i*0.07+seed*0.3))/3;const y=45+amp*34;pts.push(x+','+y)}
-  const el=document.getElementById('wave');el.innerHTML='<path d="M0,45 L'+pts.join(' L ')+' L800,45 Z" fill="#3c3c3c" stroke="none"/><polyline points="'+pts.join(' ')+'" fill="none" stroke="#d68912" stroke-width="1"/><line x1="0" y1="45" x2="800" y2="45" stroke="#555" stroke-width="0.5"/>';
-}
-function renderProg(){
-  const j=JOBS[sel];
-  document.getElementById('title').innerHTML='JOB '+j.id+' &middot; "'+j.title+'"';
-  document.getElementById('jtc').textContent='TC '+fmt(j.duration*j.prog);
-  wave();
-  const t=document.getElementById('trans');
-  t.innerHTML=j.stages.map((s,i)=>{
-    const cls=i<j.stage?'done':i===j.stage?'on':'';
-    return '<span class="stg '+cls+'">'+s.toUpperCase()+'</span>'+(i<j.stages.length-1?' <span class="sep">──'+(i<j.stage?'●':'○')+'──</span> ':'')
-  }).join('');
-  const log=document.getElementById('log');
-  if(j.status==='d'){log.innerHTML='<span class="t">[17:10:00]</span> script generated: 712 tokens, 5:10 estimated\n<span class="t">[17:10:02]</span> tts voice: <span class="k">en-AU-NatashaNeural</span>, rate 1.0\n<span class="t">[17:10:14]</span> tts chunks: 12/12 complete\n<span class="t">[17:10:15]</span> ffmpeg: 1920×1080 @ 30fps, x264 crf 23\n<span class="t">[17:13:48]</span> ffmpeg: <span class="g">done in 3m 33s</span>\n<span class="t">[17:13:49]</span> upload: chunked upload started (api quota units: 1600)\n<span class="t">[17:16:21]</span> upload: <span class="g">video ID w4n8K-xxxxx published</span>\n<span class="t">[17:16:21]</span> job complete.'}
-  else if(j.status==='f'){log.innerHTML='<span class="t">[14:01:22]</span> script generated: 428 tokens\n<span class="t">[14:01:23]</span> tts voice: en-AU-NatashaNeural\n<span class="t">[14:01:38]</span> tts chunks: 7/7 complete\n<span class="t">[14:01:40]</span> ffmpeg: started\n<span class="t">[14:03:14]</span> <span style="color:#cc3333">ERROR</span>: libx264 not found on PATH\n<span class="t">[14:03:14]</span> job failed — manual retry required.'}
-  else if(j.status==='q'){log.innerHTML='<span class="t">queued behind '+JOBS.filter((x,i)=>i<sel&&x.status==='r').length+' jobs.</span>\n<span class="t">topic approved: yes</span>\n<span class="t">assets ready: yes</span>'}
-  else{log.innerHTML='<span class="t">[17:24:01]</span> script generated: 847 tokens, 5:32 estimated runtime\n<span class="t">[17:24:04]</span> tts voice: <span class="k">en-AU-NatashaNeural</span>, rate 1.0\n<span class="t">[17:24:12]</span> tts chunks: 14/14 complete\n<span class="t">[17:24:15]</span> ffmpeg: 1920×1080 @ 30fps, x264 crf 23\n<span class="t">[17:24:18]</span> ffmpeg: processing frame '+(240+Math.floor(Date.now()/200)%8000)+'/9600 ('+(j.prog*100).toFixed(1)+'%)'}
-}
-function control(act){
-  const j=JOBS[sel];
-  if(act==='play'){playing=true;document.getElementById('rec').classList.add('red');if(j.status==='q'||j.status==='r'){j.status='r'}}
-  if(act==='pause'||act==='stop'){playing=false;document.getElementById('rec').classList.remove('red');if(act==='stop'){if(j.status==='r'){j.prog=0}}}
-  if(act==='rec'){j.status='r';j.prog=0;playing=true;document.getElementById('rec').classList.add('red')}
-  renderJobs();renderProg();
-}
-setInterval(()=>{tc+=1/8;document.getElementById('tc').textContent='TC '+fmt(tc);
-  if(playing){const j=JOBS[sel];if(j.status==='r'){j.prog=Math.min(1,j.prog+0.003);if(j.prog>=(j.stage+1)/5){j.stage=Math.min(4,j.stage+1)}if(j.prog>=1){j.status='d';playing=false;document.getElementById('rec').classList.remove('red')}renderJobs();renderProg()}}
-  const qc=JOBS.filter(x=>x.status==='q'||x.status==='r').length;
-  document.getElementById('qct').textContent=qc;
-  document.getElementById('eta').textContent=qc?((qc*7)|0)+'m':'idle';
-},125);
-renderJobs();renderProg();
+const VALS=[12,18,14,16,22,10,15];
+document.getElementById('qchart').innerHTML=VALS.map(v=>'<div style="height:'+(v/22*100)+'%"></div>').join('');
 </script>
 </body>
 </html>
