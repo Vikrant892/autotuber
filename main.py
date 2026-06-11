@@ -1,5 +1,5 @@
 """
-Main orchestrator — runs one complete video pipeline:
+Main orchestrator - runs one complete video pipeline:
 Trend → Script → Voice → Video → Thumbnail → Upload
 """
 import uuid
@@ -28,7 +28,7 @@ log = logging.getLogger("orchestrator")
 
 def run_pipeline() -> dict:
     job_id = str(uuid.uuid4())[:8]
-    log.info(f"═══ Starting job {job_id} ═══")
+    log.info(f" Starting job {job_id} ")
     db.init_db()
 
     try:
@@ -107,7 +107,7 @@ def run_pipeline() -> dict:
             "video_id": result["video_id"], "status": "done", "stage": "uploaded"
         })
         db.add_log(job_id, "INFO", f"Uploaded: {result['url']}")
-        log.info(f"═══ Job {job_id} COMPLETE: {result['url']} ═══")
+        log.info(f" Job {job_id} COMPLETE: {result['url']} ")
         return {"success": True, "job_id": job_id, **result}
     except Exception as e:
         log.error(f"Upload failed: {e}")
@@ -117,9 +117,9 @@ def run_pipeline() -> dict:
 
 if __name__ == "__main__":
     result = run_pipeline()
-    print("\n" + "═" * 50)
+    print("\n" + "" * 50)
     if result["success"]:
         print(f"✅ Success! Video live at: {result['url']}")
     else:
         print(f"❌ Failed at stage '{result['stage']}': {result['error']}")
-    print("═" * 50)
+    print("" * 50)

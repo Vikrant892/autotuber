@@ -3,13 +3,13 @@
 ONE-TIME YouTube OAuth Setup
 =============================
 Run this ONCE in Google Cloud Shell (browser-based, no local install needed).
-It generates a token you paste into GitHub Secrets — then everything is automatic forever.
+It generates a token you paste into GitHub Secrets - then everything is automatic forever.
 
 Instructions:
   1. Go to shell.cloud.google.com (free, no install)
   2. Upload this file
   3. Run: pip install google-auth-oauthlib google-api-python-client && python setup_youtube.py
-  4. A URL appears — open it in browser → log in with your-email@gmail.com → Allow
+  4. A URL appears - open it in browser → log in with your-email@gmail.com → Allow
   5. Paste the code back → token printed → paste into GitHub Secrets
 """
 import json
@@ -32,7 +32,7 @@ SCOPES = [
 
 def main():
     print("=" * 60)
-    print("AutoTuber — YouTube OAuth Setup")
+    print("AutoTuber - YouTube OAuth Setup")
     print("=" * 60)
 
     client_id     = input("\nPaste your YouTube CLIENT ID: ").strip()

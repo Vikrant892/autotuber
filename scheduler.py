@@ -1,5 +1,5 @@
 """
-Scheduler — runs the pipeline every day at 7am Adelaide time.
+Scheduler - runs the pipeline every day at 7am Adelaide time.
 Run this once and leave it running (or use Docker).
 """
 import logging

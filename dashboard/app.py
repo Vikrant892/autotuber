@@ -1,5 +1,5 @@
 """
-Dashboard web server — shows pipeline status, videos, stats.
+Dashboard web server - shows pipeline status, videos, stats.
 Runs on port 5050.
 """
 import json

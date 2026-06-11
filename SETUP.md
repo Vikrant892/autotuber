@@ -1,15 +1,15 @@
-# AutoTuber — Complete Setup Guide
+# AutoTuber - Complete Setup Guide
 ## History Unveiled | Fully Automated | Runs on GitHub Actions (Free)
 
 ---
 
-## STEP 1 — Create GitHub repo (5 min)
+## STEP 1 - Create GitHub repo (5 min)
 1. github.com → New repository → name: `autotuber` → Private → Create
 2. Upload everything from this zip into the repo
 
 ---
 
-## STEP 2 — YouTube API (10 min, ONE TIME)
+## STEP 2 - YouTube API (10 min, ONE TIME)
 
 ### Enable API
 1. console.cloud.google.com → log in with **your-email@gmail.com**
@@ -30,7 +30,7 @@
 
 ---
 
-## STEP 3 — Add GitHub Secrets
+## STEP 3 - Add GitHub Secrets
 Settings → Secrets → Actions → New repository secret
 
 | Secret Name | Value |
@@ -44,7 +44,7 @@ Settings → Secrets → Actions → New repository secret
 
 ---
 
-## STEP 4 — Deploy dashboard to Cloudflare Pages
+## STEP 4 - Deploy dashboard to Cloudflare Pages
 1. dash.cloudflare.com → Workers & Pages → Create → Pages → Upload assets
 2. Upload the `autotuber-dashboard/` folder
 3. Project name: `autotuber-dashboard` → Deploy
@@ -52,7 +52,7 @@ Settings → Secrets → Actions → New repository secret
 
 ---
 
-## STEP 5 — Done
+## STEP 5 - Done
 GitHub repo → Actions → "AutoTuber Pipeline" → Run workflow (first test)
 After that: runs automatically 5x per day, every day, forever.
 

@@ -7,10 +7,10 @@ requests>=2.31.0
 pytrends>=4.9.2
 moviepy==1.0.3
 edge-tts>=6.1.12
-# Voice — ElevenLabs (replaces edge-tts)
+# Voice - ElevenLabs (replaces edge-tts)
 # No extra package needed, uses requests directly
 
-# Video assembly — FFmpeg (system install, no pip package)
+# Video assembly - FFmpeg (system install, no pip package)
 # Install: sudo apt install ffmpeg  OR  brew install ffmpeg
 
 # YouTube upload

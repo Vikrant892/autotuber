@@ -81,7 +81,7 @@ def build_video(voice_path, script_data, job_id, topic):
     body_text = script_data.get("body", "")
     cta_text  = script_data.get("cta", "Follow for more!")
 
-    # ── HOOK (0-7s): huge white text, fades in fast ───────────────────────────
+    # HOOK (0-7s): huge white text, fades in fast
     if hook_text:
         # Shadow layer
         layers.append(
@@ -103,7 +103,7 @@ def build_video(voice_path, script_data, job_id, topic):
             .crossfadein(0.15).crossfadeout(0.3)
         )
 
-    # ── FACT CARD (7-12s): orange box ────────────────────────────────────────
+    # FACT CARD (7-12s): orange box
     if body_text:
         first = body_text.split(".")[0].strip() + "."
 
@@ -146,7 +146,7 @@ def build_video(voice_path, script_data, job_id, topic):
             .crossfadein(0.2).crossfadeout(0.25)
         )
 
-    # ── BODY (12s → end-7s): white text with subtle bg ───────────────────────
+    # BODY (12s → end-7s): white text with subtle bg
     if body_text and duration > 16:
         body_dur = max(4, duration - 19)
 
@@ -168,7 +168,7 @@ def build_video(voice_path, script_data, job_id, topic):
             .crossfadein(0.35).crossfadeout(0.35)
         )
 
-    # ── CTA (last 7s) ─────────────────────────────────────────────────────────
+    # CTA (last 7s)
     cta_start = max(duration - 7, duration * 0.78)
 
     layers.append(
@@ -204,7 +204,7 @@ def build_video(voice_path, script_data, job_id, topic):
         .set_opacity(0.85)
     )
 
-    # ── Progress bar ──────────────────────────────────────────────────────────
+    # Progress bar
     def prog(t):
         f = np.zeros((14, W, 3), dtype=np.uint8)
         n = int(W * t / duration)

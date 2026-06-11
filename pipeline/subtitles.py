@@ -1,6 +1,6 @@
 """
 pipeline/subtitles.py
-Generates ASS subtitle file — POP style (one word at a time, centred, animated)
+Generates ASS subtitle file - POP style (one word at a time, centred, animated)
 """
 
 ASS_HEADER = """\
@@ -30,7 +30,7 @@ def _seconds_to_ass(seconds: float) -> str:
 
 def generate_ass(word_timings: list[dict], output_path: str) -> str:
     """
-    Writes ASS subtitle file — one word pops in at a time.
+    Writes ASS subtitle file - one word pops in at a time.
     Each word scales 130%→100% in 80ms (pop animation).
     Returns output_path.
     """

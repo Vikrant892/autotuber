@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>AutoTuber — History Unveiled</title>
+<title>AutoTuber - History Unveiled</title>
 <style>
 :root{--bg:#07070f;--card:#0f0f1f;--card2:#13131f;--orange:#ff6b35;--blue:#60a5fa;--green:#34d399;--red:#f87171;--amber:#fbbf24;--text:#e8e8f0;--muted:#6b7280;--border:#1e1e3a}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -164,7 +164,7 @@ main{padding:36px 40px;max-width:1400px;margin:0 auto}
       <div class="stat-sub">Based on $1.5 RPM avg</div></div>
     <div class="stat b"><div class="stat-ico">⏱</div>
       <div class="stat-lbl">Next Upload In</div>
-      <div class="stat-val" id="s-next">—</div>
+      <div class="stat-val" id="s-next">-</div>
       <div class="stat-sub">Fully automatic</div></div>
     <div class="stat a"><div class="stat-ico">📅</div>
       <div class="stat-lbl">Uploads Today</div>
@@ -182,7 +182,7 @@ main{padding:36px 40px;max-width:1400px;margin:0 auto}
         </div>
         <div id="vid-list"><div class="empty">Loading...</div></div>
         <div class="gh-banner">
-          🤖 Pipeline runs on GitHub Actions — free cloud compute, never stops.
+          🤖 Pipeline runs on GitHub Actions - free cloud compute, never stops.
           <a href="https://github.com/vikrant69g/autotuber/actions" target="_blank">View runs ↗</a>
         </div>
       </div>
@@ -205,7 +205,7 @@ main{padding:36px 40px;max-width:1400px;margin:0 auto}
         <div class="card-hdr"><div class="card-title">⏰ Schedule</div></div>
         <div class="next-card">
           <div class="next-label">Next run in</div>
-          <div class="next-time" id="countdown">—</div>
+          <div class="next-time" id="countdown">-</div>
           <div class="next-sub" id="next-at">Calculating...</div>
           <div style="margin-top:14px;font-size:11px;color:var(--muted);margin-bottom:8px">Today's scheduled runs (Adelaide time)</div>
           <div class="sched-dots" id="sched-dots"></div>
@@ -248,7 +248,7 @@ main{padding:36px 40px;max-width:1400px;margin:0 auto}
 </div>
 
 <script>
-// ── Particle bg ───────────────────────────────────────────────────────────────
+// Particle bg
 const cv=document.getElementById('canvas'),cx=cv.getContext('2d');
 let W,H,pts=[],mx=0,my=0;
 function rsz(){W=cv.width=innerWidth;H=cv.height=innerHeight}rsz();
@@ -277,7 +277,7 @@ function draw(){
 }
 draw();
 
-// ── Schedule (UTC cron times → Adelaide) ─────────────────────────────────────
+// Schedule (UTC cron times → Adelaide)
 // Cron: 0,3,7,12,19 UTC = 9:30am,12:30pm,4:30pm,9:30pm,4:30am Adelaide (ACST)
 const CRON_UTC=[0,3,7,12,19];
 
@@ -321,7 +321,7 @@ function updateCountdown(){
 setInterval(updateCountdown,1000);
 updateCountdown();
 
-// ── Pipeline stages ────────────────────────────────────────────────────────────
+// Pipeline stages
 const STAGES=[
   {id:'topic_found', label:'Trend Finder',   icon:'🔍'},
   {id:'script_done', label:'Script Writer',  icon:'✍️'},
@@ -346,9 +346,8 @@ function renderStages(stage,status){
 }
 renderStages('',  'idle');
 
-// ── Mock data (replace with real GitHub API or your DB endpoint) ───────────────
-// In production: fetch from your Cloudflare Worker that reads D1 or KV
-const MOCK_JOBS=[
+// Sample pipeline history for the static preview.
+const SAMPLE_JOBS=[
   {id:'a1b2c3',topic:'Why the Roman Empire Really Fell',title:'The REAL Reason Rome Collapsed (Not What You Think)',
    status:'done',stage:'uploaded',created_at:new Date(Date.now()-3600000*2).toISOString(),
    video_url:'https://youtube.com'},
@@ -358,9 +357,9 @@ const MOCK_JOBS=[
 ];
 
 function loadAll(){
-  const done=MOCK_JOBS.filter(j=>j.status==='done').length;
-  const running=MOCK_JOBS.filter(j=>j.status==='running').length;
-  const today=MOCK_JOBS.filter(j=>new Date(j.created_at).toDateString()===new Date().toDateString()).length;
+  const done=SAMPLE_JOBS.filter(j=>j.status==='done').length;
+  const running=SAMPLE_JOBS.filter(j=>j.status==='running').length;
+  const today=SAMPLE_JOBS.filter(j=>new Date(j.created_at).toDateString()===new Date().toDateString()).length;
   const rev=(done*1.5).toFixed(0);
 
   document.getElementById('s-done').textContent=done;
@@ -378,8 +377,8 @@ function loadAll(){
 
   // Video list
   const el=document.getElementById('vid-list');
-  if(!MOCK_JOBS.length){el.innerHTML='<div class="empty">First video uploading soon...</div>';return}
-  el.innerHTML=MOCK_JOBS.map(j=>`
+  if(!SAMPLE_JOBS.length){el.innerHTML='<div class="empty">First video uploading soon...</div>';return}
+  el.innerHTML=SAMPLE_JOBS.map(j=>`
     <div class="vid" onclick="showLog('${j.id}','${j.stage}','${j.status}')">
       <div class="vid-thumb">🎬</div>
       <div class="vid-info">
@@ -392,7 +391,7 @@ function loadAll(){
     </div>`).join('');
 
   // Stages from latest
-  if(MOCK_JOBS[0]) renderStages(MOCK_JOBS[0].stage, MOCK_JOBS[0].status);
+  if(SAMPLE_JOBS[0]) renderStages(SAMPLE_JOBS[0].stage, SAMPLE_JOBS[0].status);
 }
 
 function showLog(id,stage,status){

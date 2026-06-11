@@ -101,7 +101,7 @@ def _fallback(used_topics: list[str]) -> str:
 
 
 def get_topic(used_topics: list[str] = []) -> str:
-    """Main entry — returns the best topic for today's video."""
+    """Main entry - returns the best topic for today's video."""
     log.info("Finding trending topic...")
     candidates = []
     candidates.extend(get_reddit_topics())

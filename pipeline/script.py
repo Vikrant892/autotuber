@@ -25,9 +25,9 @@ Topic: {topic}
 Rules:
 - Total spoken word count: 120-150 words MAX (45-55 seconds at fast speech)
 - Hook must land in first 3 seconds or viewer swipes away
-- One single shocking fact — do NOT cover multiple things
+- One single shocking fact - do NOT cover multiple things
 - End with "Follow for more" or similar CTA
-- Vertical video (9:16) — write for mobile viewers
+- Vertical video (9:16) - write for mobile viewers
 
 Return ONLY valid JSON, no markdown, no explanation:
 
